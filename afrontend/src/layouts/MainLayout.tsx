@@ -3,13 +3,15 @@ import Sidebar from "@components/layout/Sidebar";
 
 const MainLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar on the left */}
+    <div className="flex min-h-screen w-screen bg-gray-100 text-white">
+      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main content on the right */}
-      <main className="flex-grow p-6 bg-gray-100 overflow-y-auto">
-        {children}
+      {/* Main content area */}
+      <main className="flex-grow p-4">
+        <div className="w-full h-full bg-green-600 rounded-xl p-6">
+          {children}
+        </div>
       </main>
     </div>
   );
