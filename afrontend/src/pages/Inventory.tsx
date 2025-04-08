@@ -1,7 +1,5 @@
-import React from "react";
-
 const Inventory = () => {
-  return <div></div>;
+  return <div>gggg</div>;
 };
 
 export default Inventory;
