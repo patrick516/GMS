@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 
 interface InventoryItem {
-  id: number;
+  _id: string;
   name: string;
   quantity: number;
   costPricePerUnit: number;
@@ -89,7 +89,7 @@ const CustomerForm = () => {
     setPurchasedInventory(selectedInventory);
 
     const selectedItem = inventoryList.find(
-      (item) => item.name === selectedInventory
+      (item) => String(item._id) === selectedInventory
     );
 
     if (selectedItem) {
@@ -106,7 +106,7 @@ const CustomerForm = () => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const qty = e.target.value;
     const selectedItem = inventoryList.find(
-      (item) => item.name === purchasedInventory
+      (item) => String(item._id) === purchasedInventory
     );
 
     if (selectedItem && parseFloat(qty) > selectedItem.quantity) {
@@ -149,8 +149,8 @@ const CustomerForm = () => {
       name,
       email,
       phone,
-      purchasedInventory,
-      quantity,
+      purchasedInventoryId: purchasedInventory,
+      quantityPurchased: parseInt(quantity),
       costPricePerUnit: parseFloat(costPricePerUnit),
       salePricePerUnit: parseFloat(salePricePerUnit),
       totalAmount: parseFloat(totalAmount),
@@ -203,7 +203,6 @@ const CustomerForm = () => {
         role="form"
         aria-labelledby="form-title"
         onSubmit={handleSubmit}
-        onSubmit={handleSubmit}
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <TextField
@@ -247,7 +246,7 @@ const CustomerForm = () => {
         >
           <MenuItem value="">Select Inventory</MenuItem>
           {inventoryList.map((item) => (
-            <MenuItem key={item.id} value={item.name}>
+            <MenuItem key={item._id} value={item._id}>
               {item.name} (Available: {item.quantity})
             </MenuItem>
           ))}
@@ -264,7 +263,7 @@ const CustomerForm = () => {
           inputProps={{
             min: 1,
             max:
-              inventoryList.find((item) => item.name === purchasedInventory)
+              inventoryList.find((item) => item._id === purchasedInventory)
                 ?.quantity || 0,
           }}
           fullWidth

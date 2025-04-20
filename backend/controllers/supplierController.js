@@ -1,48 +1,32 @@
 const Supplier = require("../models/Supplier");
 
-// @desc    Add new supplier
 exports.addSupplier = async (req, res) => {
   try {
-    const { name, email, phone, company, address } = req.body;
+    const { name, email, phone, address, company, productId } = req.body;
 
-    const newSupplier = new Supplier({
+    const supplier = await Supplier.create({
       name,
       email,
       phone,
-      company,
       address,
+      company,
+      productId, // Optional, if you want to link to inventory
     });
 
-    await newSupplier.save();
-
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Supplier added successfully",
-        data: newSupplier,
-      });
+    res.status(201).json({ success: true, data: supplier });
   } catch (err) {
-    console.error(err);
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", error: err.message });
+    console.error("Error adding supplier:", err);
+    res.status(500).json({ success: false, message: "Failed to add supplier" });
   }
 };
-
-// @desc    Get all suppliers
 exports.getSuppliers = async (req, res) => {
   try {
-    const suppliers = await Supplier.find();
+    const suppliers = await Supplier.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: suppliers });
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching suppliers:", err);
     res
       .status(500)
-      .json({
-        success: false,
-        message: "Could not fetch suppliers",
-        error: err.message,
-      });
+      .json({ success: false, message: "Failed to fetch suppliers" });
   }
 };

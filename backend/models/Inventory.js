@@ -12,8 +12,15 @@ const inventorySchema = new mongoose.Schema(
     totalCosts: String,
     totalCostOfSales: String,
     image: String,
+
+    //  New: Optional link to supplier
+    supplierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Supplier",
+      required: false,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Inventory", inventorySchema, "inventories"); // <- use 'inventories' collection name explicitly
+module.exports = mongoose.model("Inventory", inventorySchema, "inventories");

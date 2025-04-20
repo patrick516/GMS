@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const supplierController = require("../controllers/supplierController");
+const {
+  addSupplier,
+  getSuppliers,
+} = require("../controllers/supplierController");
 
-// POST /api/supplier/add
-router.post("/add", supplierController.addSupplier);
-
-// GET /api/supplier/all
-router.get("/all", supplierController.getSuppliers);
+router.post("/add", addSupplier);
+router.get("/", getSuppliers);
 
 module.exports = router;

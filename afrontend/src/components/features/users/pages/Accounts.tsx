@@ -2,15 +2,30 @@ import { useEffect, useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { toast } from "react-toastify";
-import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import axios from "axios";
+
+function setupAutoTable(jsPDFLib: any) {
+  try {
+    autoTable(jsPDFLib, {});
+    console.log("autoTable registered");
+  } catch (err) {
+    console.error("Failed to patch autoTable:", err);
+  }
+}
+
+setupAutoTable(jsPDF);
 
 interface Employee {
-  id: number;
+  _id: string;
   fullName: string;
+  email?: string;
+  phone?: string;
   position: string;
+  type: string;
   salary: number;
+  startDate: string;
 }
 
 interface Payslip extends Employee {
@@ -25,45 +40,72 @@ interface Payslip extends Employee {
 const Accounts = () => {
   const [payQueue, setPayQueue] = useState<Employee[]>([]);
   const [completedPayslips, setCompletedPayslips] = useState<Payslip[]>([]);
-  const [formData, setFormData] = useState<Record<number, Partial<Payslip>>>(
+  const [formData, setFormData] = useState<Record<string, Partial<Payslip>>>(
     {}
   );
 
   useEffect(() => {
-    // TODO: Replace with API call to fetch employees
-    const fetchedEmployees: Employee[] = [
-      { id: 1, fullName: "John Banda", position: "Mechanic", salary: 120000 },
-      {
-        id: 2,
-        fullName: "Jane Phiri",
-        position: "Receptionist",
-        salary: 95000,
-      },
-      { id: 3, fullName: "James Mwale", position: "Cleaner", salary: 300000 },
-    ];
-    setPayQueue(fetchedEmployees);
-  }, []);
+    const fetchEmployeesForCurrentMonth = async () => {
+      try {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
 
+        const processedRes = await axios.get(
+          `${
+            import.meta.env.VITE_API_URL
+          }/payslips/processed?month=${month}&year=${year}`
+        );
+        const processedIds: string[] = processedRes.data.data;
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/employees`
+        );
+        const unprocessedEmployees = response.data.data.filter(
+          (emp: Employee) => !processedIds.includes(emp._id)
+        );
+
+        setPayQueue(unprocessedEmployees);
+
+        const payslipsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL}/payslips/all`
+        );
+        const data = payslipsRes.data.data.map((p: any) => ({
+          ...p,
+          fullName: p.employeeId.fullName,
+          position: p.employeeId.position,
+          salary: p.salary,
+          startDate: p.employeeId.startDate,
+        }));
+        setCompletedPayslips(data);
+      } catch (error) {
+        console.error("Failed to fetch employees or payslips:", error);
+      }
+    };
+    fetchEmployeesForCurrentMonth();
+  }, []);
   const calculateTax = (salary: number): number => {
     if (salary <= 100000) return 0;
-    if (salary <= 1000000) return (salary - 100000) * 0.25;
-    return 900000 * 0.25 + (salary - 1000000) * 0.3;
+    if (salary <= 200000) return (salary - 100000) * 0.1;
+    if (salary <= 499000) return (salary - 200000) * 0.15 + 10000;
+    return (salary - 499000) * 0.3 + 299000 * 0.2 + 10000;
   };
 
-  const handleChange = (id: number, field: keyof Payslip, value: number) => {
+  const handleChange = (id: string, field: keyof Payslip, value: number) => {
     setFormData((prev) => {
       const updated = {
         ...prev[id],
         [field]: value,
       };
 
-      // Auto-calculate netPay
-      const emp = payQueue.find((e) => e.id === id);
+      const emp = payQueue.find((e) => e._id === id);
       if (!emp) return prev;
 
       const perDayRate = emp.salary / 30;
       const daysAbsent = updated.daysAbsent || 0;
       const tax = calculateTax(emp.salary);
+      console.log("CALCULATED TAX:", emp.fullName, tax);
+
       const allowances = updated.allowances || 0;
       const otherDeductions = updated.otherDeductions || 0;
 
@@ -85,8 +127,26 @@ const Accounts = () => {
     });
   };
 
-  const handleMarkAsPaid = (emp: Employee) => {
-    const data = formData[emp.id] || {};
+  // const fetchCompletedPayslips = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       `${import.meta.env.VITE_API_URL}/payslips/all`
+  //     );
+  //     const data = res.data.data.map((p: any) => ({
+  //       ...p,
+  //       fullName: p.employeeId.fullName,
+  //       position: p.employeeId.position,
+  //       salary: p.salary,
+  //       startDate: p.employeeId.startDate,
+  //     }));
+  //     setCompletedPayslips(data);
+  //   } catch (error) {
+  //     console.error(" Failed to load completed payslips:", error);
+  //   }
+  // };
+
+  const handleMarkAsPaid = async (emp: Employee) => {
+    const data = formData[emp._id] || {};
     const payslip: Payslip = {
       ...emp,
       daysAbsent: data.daysAbsent || 0,
@@ -96,70 +156,115 @@ const Accounts = () => {
       netPay: data.netPay || emp.salary,
       dateProcessed: new Date().toLocaleString(),
     };
-    setCompletedPayslips((prev) => [...prev, payslip]);
-    setPayQueue((prev) => prev.filter((e) => e.id !== emp.id));
-    toast.success(`Payslip processed for ${emp.fullName}`);
+
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/payslips/add`, {
+        employeeId: emp._id,
+        daysAbsent: payslip.daysAbsent,
+        tax: payslip.tax,
+        allowances: payslip.allowances,
+        otherDeductions: payslip.otherDeductions,
+        netPay: payslip.netPay,
+        salary: payslip.salary,
+      });
+
+      setCompletedPayslips((prev) => [...prev, payslip]);
+      setPayQueue((prev) => prev.filter((e) => e._id !== emp._id));
+      toast.success(`Payslip processed for ${emp.fullName}`);
+    } catch (error) {
+      console.error("Failed to save payslip:", error);
+      toast.error("Could not mark payslip as paid");
+    }
   };
 
-  const handleExportExcel = () => {
-    const data = completedPayslips.map((p) => ({
-      Name: p.fullName,
-      Position: p.position,
-      Salary: p.salary,
-      DaysAbsent: p.daysAbsent,
-      Tax: p.tax,
-      Allowances: p.allowances,
-      OtherDeductions: p.otherDeductions,
-      NetPay: p.netPay,
-      Date: p.dateProcessed,
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Payslips");
-    XLSX.writeFile(workbook, "Payslips.xlsx");
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
 
-    const img = new Image();
-    img.src = "/logos/uas-motors-logo.png";
+    const logo = new Image();
+    logo.src = "/logos/uas-motors-logo.png";
 
-    img.onload = () => {
-      doc.addImage(img, "PNG", 10, 10, 30, 30);
-      doc.setFontSize(16);
-      doc.text("Garage Inventory Data Management System", 45, 25);
+    const renderPDF = () => {
+      let x = 10;
+      let y = 20;
 
-      autoTable(doc, {
-        startY: 50,
-        head: [
-          [
-            "Name",
-            "Position",
-            "Salary",
-            "Absent",
-            "Tax",
-            "Allowances",
-            "Deductions",
-            "Net Pay",
-            "Date",
+      completedPayslips.forEach((payslip, index) => {
+        if (index % 2 === 0 && index > 0) {
+          doc.addPage();
+        }
+
+        x = index % 2 === 0 ? 10 : 110;
+        y = 20;
+
+        doc.setFontSize(10);
+        doc.addImage(logo, "PNG", x, y, 20, 20);
+        doc.text("Payslip", x + 25, y + 5);
+        doc.setFontSize(8);
+        doc.text(
+          `Date of Joining: ${new Date(
+            payslip.startDate
+          ).toLocaleDateString()}`,
+          x,
+          y + 20
+        );
+        doc.text(`Pay Period: ${new Date().toLocaleDateString()}`, x, y + 25);
+        doc.text(`Worked Days: ${30 - payslip.daysAbsent}`, x, y + 30);
+        doc.text(`Employee name: ${payslip.fullName}`, x + 50, y + 20);
+        doc.text(`Designation: ${payslip.position}`, x + 50, y + 25);
+        doc.text(`Department: Workshop`, x + 50, y + 30);
+
+        autoTable(doc, {
+          startY: y + 35,
+          margin: { left: x },
+          tableWidth: 85,
+          head: [["Earnings", "Amount", "Deductions", "Amount"]],
+          body: [
+            [
+              "Basic",
+              formatCurrency(payslip.salary),
+              "Tax",
+              formatCurrency(payslip.tax),
+            ],
+            [
+              "Allowances",
+              formatCurrency(payslip.allowances),
+              "Other Deductions",
+              formatCurrency(payslip.otherDeductions),
+            ],
+            ["", "", "", ""],
+            [
+              "Total Earnings",
+              formatCurrency(payslip.salary) +
+                formatCurrency(payslip.allowances),
+              "Total Deductions",
+              formatCurrency(payslip.tax) +
+                formatCurrency(payslip.otherDeductions),
+            ],
+            ["Net Pay", formatCurrency(payslip.netPay), "", ""],
           ],
-        ],
-        body: completedPayslips.map((p) => [
-          p.fullName,
-          p.position,
-          p.salary,
-          p.daysAbsent,
-          p.tax,
-          p.allowances,
-          p.otherDeductions,
-          p.netPay,
-          p.dateProcessed,
-        ]),
+          styles: { fontSize: 7 },
+        });
+
+        doc.text("Employer Signature", x, y + 100);
+        doc.text("Employee Signature", x + 60, y + 100);
+        doc.text("This is system generated payslip", x, y + 110);
       });
 
       doc.save("Payslips.pdf");
     };
+
+    //  Ensure the logo is fully loaded before rendering the PDF
+    if (logo.complete) {
+      renderPDF();
+    } else {
+      logo.onload = renderPDF;
+    }
   };
 
   const columns: GridColDef[] = [
@@ -188,9 +293,9 @@ const Accounts = () => {
       </Typography>
 
       {payQueue.slice(0, 2).map((emp) => {
-        const data = formData[emp.id] || {};
+        const data = formData[emp._id] || {};
         return (
-          <Box key={emp.id} className="border p-4 rounded-lg mb-4 bg-gray-50">
+          <Box key={emp._id} className="border p-4 rounded-lg mb-4 bg-gray-50">
             <Typography className="mb-2 font-semibold">
               {emp.fullName} ({emp.position})
             </Typography>
@@ -199,7 +304,11 @@ const Accounts = () => {
                 label="Absent Days"
                 type="number"
                 onChange={(e) =>
-                  handleChange(emp.id, "daysAbsent", parseFloat(e.target.value))
+                  handleChange(
+                    emp._id,
+                    "daysAbsent",
+                    parseFloat(e.target.value)
+                  )
                 }
                 fullWidth
               />
@@ -207,7 +316,11 @@ const Accounts = () => {
                 label="Allowances (MWK)"
                 type="number"
                 onChange={(e) =>
-                  handleChange(emp.id, "allowances", parseFloat(e.target.value))
+                  handleChange(
+                    emp._id,
+                    "allowances",
+                    parseFloat(e.target.value)
+                  )
                 }
                 fullWidth
               />
@@ -216,7 +329,7 @@ const Accounts = () => {
                 type="number"
                 onChange={(e) =>
                   handleChange(
-                    emp.id,
+                    emp._id,
                     "otherDeductions",
                     parseFloat(e.target.value)
                   )
@@ -251,11 +364,8 @@ const Accounts = () => {
         Completed Payslips
       </Typography>
 
-      <div className="flex gap-4 justify-end mb-4">
-        <Button variant="outlined" color="primary" onClick={handleExportExcel}>
-          Export to Excel
-        </Button>
-        <Button variant="outlined" color="secondary" onClick={handleExportPDF}>
+      <div className="flex justify-end mb-4">
+        <Button variant="outlined" onClick={handleExportPDF}>
           Export to PDF
         </Button>
       </div>
@@ -269,10 +379,10 @@ const Accounts = () => {
         <DataGrid
           rows={completedPayslips.map((p, i) => ({ id: i + 1, ...p }))}
           columns={columns}
-          pageSizeOptions={[5, 10]}
+          pageSizeOptions={[2, 5, 10]}
           initialState={{
             pagination: {
-              paginationModel: { page: 0, pageSize: 5 },
+              paginationModel: { page: 0, pageSize: 2 },
             },
           }}
         />

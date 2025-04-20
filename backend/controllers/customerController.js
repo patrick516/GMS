@@ -14,6 +14,13 @@ exports.addCustomer = async (req, res) => {
       payment = 0,
     } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(purchasedInventoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid inventory ID provided",
+      });
+    }
+
     const totalSaleAmount = quantityPurchased * salePricePerUnit;
     const balance = totalSaleAmount - payment;
 
@@ -21,7 +28,7 @@ exports.addCustomer = async (req, res) => {
       name,
       email,
       phone,
-      purchasedInventoryId: mongoose.Types.ObjectId(purchasedInventoryId),
+      purchasedInventoryId: new mongoose.Types.ObjectId(purchasedInventoryId),
       quantityPurchased,
       salePricePerUnit,
       totalSaleAmount,
@@ -33,8 +40,13 @@ exports.addCustomer = async (req, res) => {
 
     res.status(201).json({ success: true, customer });
   } catch (err) {
-    console.error("Error adding customer:", err);
-    res.status(500).json({ success: false, message: "Error adding customer" });
+    console.error(" FULL ERROR:", err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message || "Error adding customer",
+      stack: err.stack,
+    });
   }
 };
 
@@ -95,5 +107,42 @@ exports.getAllCustomers = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Failed to fetch customers" });
+  }
+};
+
+// GET /api/customers/summary
+exports.getCustomerSummary = async (req, res) => {
+  try {
+    const startOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
+    const newCustomers = await Customer.countDocuments({
+      createdAt: { $gte: startOfMonth },
+    });
+
+    const topSpender = await Customer.aggregate([
+      {
+        $group: {
+          _id: "$name",
+          totalSpent: { $sum: "$payment" },
+        },
+      },
+      { $sort: { totalSpent: -1 } },
+      { $limit: 1 },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      newCustomers,
+      topSpender: topSpender[0]?.totalSpent || 0,
+    });
+  } catch (err) {
+    console.error("Error generating customer summary:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate customer summary",
+    });
   }
 };
