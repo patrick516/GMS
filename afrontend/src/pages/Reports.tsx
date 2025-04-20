@@ -6,6 +6,7 @@ import { Box, Typography, Button, TextField, MenuItem } from "@mui/material";
 import Chart from "chart.js/auto";
 import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 // import { saveAs } from "file-saver";
 
