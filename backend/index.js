@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const connectDB = require("./db");
 
 const express = require("express");
@@ -8,6 +10,13 @@ const inventoryRoutes = require("./routes/inventory.route");
 const supplierRoutes = require("./routes/supplier");
 const customerRoutes = require("./routes/customer");
 const debtorRoutes = require("./routes/debtor");
+const reorderRoutes = require("./routes/reorder");
+const employeeRoutes = require("./routes/employee");
+const payslipRoutes = require("./routes/payslip");
+const vehicleRoutes = require("./routes/vehicle");
+const reportRoutes = require("./routes/report");
+const invoiceRoutes = require("./routes/invoice");
+const quotationRoutes = require("./routes/quotation");
 
 const app = express();
 app.use(cors());
@@ -20,8 +29,15 @@ app.use("/api/supplier", supplierRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/debtors", require("./routes/debtor"));
 app.use("/api/inventory", require("./routes/inventory"));
-
+app.use("/api/reorder", reorderRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/payslips", payslipRoutes);
+app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/invoices", invoiceRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/quotations", quotationRoutes);
+
 connectDB();
 
 app.listen(5000, () => {

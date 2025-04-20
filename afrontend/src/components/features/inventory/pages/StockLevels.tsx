@@ -1,7 +1,22 @@
 import { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+
+const systemUser = {
+  name: "Garage Admin",
+  phone: "+265995049331",
+  email: "kulinjipatricks@gmail.com",
+};
+
+const CRITICAL_STOCK_THRESHOLD = 5;
+
+interface Supplier {
+  name?: string;
+  phone?: string;
+  email?: string;
+}
 
 interface InventoryItem {
   _id: string;
@@ -9,10 +24,12 @@ interface InventoryItem {
   quantity: number;
   totalPurchased: number;
   currentStock: number;
+  supplier?: Supplier;
 }
 
 const StockLevels = () => {
   const [rows, setRows] = useState<any[]>([]);
+  const [reorderedIds, setReorderedIds] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchStockLevels = async () => {
@@ -22,12 +39,13 @@ const StockLevels = () => {
         );
         const inventory: InventoryItem[] = response.data.data;
 
-        const formatted = inventory.map((item, index) => ({
+        const formatted = inventory.map((item) => ({
           id: item._id,
           name: item.name,
           initialStock: item.quantity,
           sold: item.totalPurchased,
           remaining: item.currentStock,
+          supplier: item.supplier || null,
         }));
 
         setRows(formatted);
@@ -39,11 +57,52 @@ const StockLevels = () => {
     fetchStockLevels();
   }, []);
 
+  const handleReorder = async (item: any) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/reorder/whatsapp`, {
+        supplierName: item.supplier.name,
+        supplierPhone: item.supplier.phone,
+        productName: item.name,
+        systemUserName: systemUser.name,
+      });
+      toast.success("Reorder message sent to supplier via WhatsApp");
+    } catch (err) {
+      console.error("WhatsApp reorder failed:", err);
+      toast.error("Failed to send WhatsApp reorder message");
+    }
+    setReorderedIds((prev) => [...prev, item.id]);
+  };
+
   const columns: GridColDef[] = [
     { field: "name", headerName: "Product Name", flex: 1 },
     { field: "initialStock", headerName: "Initial Stock", width: 150 },
     { field: "sold", headerName: "Sold", width: 120 },
     { field: "remaining", headerName: "Remaining", width: 140 },
+    {
+      field: "supplier",
+      headerName: "Reorder",
+      flex: 1,
+      renderCell: (params) => {
+        const item = params.row;
+        const supplier = item.supplier;
+        const isCritical = item.remaining <= CRITICAL_STOCK_THRESHOLD;
+
+        if (!supplier || !supplier.phone || !isCritical) {
+          return <span className="text-gray-400">N/A</span>;
+        }
+
+        return (
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={reorderedIds.includes(item.id)}
+            onClick={() => handleReorder(item)}
+          >
+            {reorderedIds.includes(item.id) ? "Reordered" : "Reorder"}
+          </Button>
+        );
+      },
+    },
   ];
 
   return (
@@ -91,6 +150,7 @@ const StockLevels = () => {
           }}
         />
       </div>
+      <ToastContainer />
     </Box>
   );
 };

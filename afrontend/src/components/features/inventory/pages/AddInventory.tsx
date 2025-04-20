@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, TextField } from "@mui/material";
+import { MenuItem } from "@mui/material";
+
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -19,6 +21,10 @@ const schema = z.object({
 });
 
 const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
+  const [suppliers, setSuppliers] = useState<{ _id: string; name: string }[]>(
+    []
+  );
+  const [supplierId, setSupplierId] = useState("");
   const {
     register,
     handleSubmit,
@@ -70,6 +76,19 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
     }
   }, [itemToEdit, reset]);
 
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/supplier`);
+        setSuppliers(res.data.data);
+      } catch (err) {
+        console.error("Error fetching suppliers:", err);
+      }
+    };
+
+    fetchSuppliers();
+  }, []);
+
   const onSubmit = async (data: any) => {
     console.log("API BASE URL:", import.meta.env.VITE_API_URL);
 
@@ -103,6 +122,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
       totalCosts,
       totalCostOfSales,
       image: uploadedImage,
+      supplierId: supplierId || null,
     };
 
     try {
@@ -290,7 +310,21 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
           }}
           fullWidth
         />
-        <div className="col-span-1 md:col-span-2">
+        <TextField
+          select
+          label="Supplier (optional)"
+          value={supplierId}
+          onChange={(e) => setSupplierId(e.target.value)}
+          fullWidth
+        >
+          <MenuItem value="">No Supplier</MenuItem>
+          {suppliers.map((s) => (
+            <MenuItem key={s._id} value={s._id}>
+              {s.name}
+            </MenuItem>
+          ))}
+        </TextField>
+        {/* <div className="col-span-1 md:col-span-2">
           <label className="block font-semibold mb-2">Upload Image</label>
           <input
             type="file"
@@ -310,7 +344,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
               className="mt-2 w-32 h-32 object-contain border rounded"
             />
           )}
-        </div>
+        </div> */}
 
         <div className="col-span-1 md:col-span-2 flex gap-4 mt-4">
           <Button

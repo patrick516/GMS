@@ -227,6 +227,60 @@ const Sidebar = () => {
           </div>
         )}
 
+        <div
+          onClick={() => setVehiclesOpen(!isVehiclesOpen)}
+          className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
+        >
+          <FaCarSide className="mr-3" />
+          <span className="flex-1">Vehicles</span>
+          <LiaCaretSquareDownSolid
+            className={`text-lg transition-transform duration-200 ${
+              isInventoryOpen ? "rotate-180" : "rotate-0"
+            }`}
+          />
+        </div>
+
+        {/* Vehicle sub-links */}
+        {isVehiclesOpen && (
+          <div className="ml-8 flex flex-col space-y-1">
+            <NavLink
+              to="/vehicles/add"
+              className={({ isActive }) =>
+                `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
+                  isActive ? "bg-gray-700" : ""
+                }`
+              }
+            >
+              <FaPlus className="mr-2" />
+              Add Vehicle
+            </NavLink>
+
+            {/* <NavLink
+              to="/vehicles/list"
+              className={({ isActive }) =>
+                `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
+                  isActive ? "bg-gray-700" : ""
+                }`
+              }
+            >
+              <FaList className="mr-2" />
+              Vehicle List
+            </NavLink>
+
+            <NavLink
+              to="/vehicles/types"
+              className={({ isActive }) =>
+                `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
+                  isActive ? "bg-gray-700" : ""
+                }`
+              }
+            >
+              <FaCogs className="mr-2" />
+              Vehicle Types
+            </NavLink> */}
+          </div>
+        )}
+
         {/* Quotations */}
         <div
           onClick={() => setQuotationsOpen(!isQuotationsOpen)}
@@ -292,6 +346,17 @@ const Sidebar = () => {
             >
               Create Invoice
             </NavLink> */}
+            <NavLink
+              to="/invoices/details"
+              className={({ isActive }) =>
+                `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
+                  isActive ? "bg-gray-700" : ""
+                }`
+              }
+            >
+              Invoice List
+            </NavLink>
+
             {/* <NavLink
               to="/invoices"
               className={({ isActive }) =>
@@ -306,7 +371,7 @@ const Sidebar = () => {
         )}
 
         {/*Vehicles*/}
-
+        {/* 
         <div
           onClick={() => setVehiclesOpen(!isVehiclesOpen)}
           className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
@@ -318,48 +383,9 @@ const Sidebar = () => {
               isInventoryOpen ? "rotate-180" : "rotate-0"
             }`}
           />
-        </div>
+        </div> */}
 
         {/* Vehicle sub-links */}
-        {isVehiclesOpen && (
-          <div className="ml-8 flex flex-col space-y-1">
-            <NavLink
-              to="/vehicles/add"
-              className={({ isActive }) =>
-                `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
-                  isActive ? "bg-gray-700" : ""
-                }`
-              }
-            >
-              <FaPlus className="mr-2" />
-              Add Vehicle
-            </NavLink>
-
-            {/* <NavLink
-              to="/vehicles/list"
-              className={({ isActive }) =>
-                `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
-                  isActive ? "bg-gray-700" : ""
-                }`
-              }
-            >
-              <FaList className="mr-2" />
-              Vehicle List
-            </NavLink>
-
-            <NavLink
-              to="/vehicles/types"
-              className={({ isActive }) =>
-                `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
-                  isActive ? "bg-gray-700" : ""
-                }`
-              }
-            >
-              <FaCogs className="mr-2" />
-              Vehicle Types
-            </NavLink> */}
-          </div>
-        )}
 
         <NavLink
           to="/reports"

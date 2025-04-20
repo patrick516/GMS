@@ -5,12 +5,19 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { Autocomplete } from "@mui/material";
+import axios from "axios";
 
 const schema = z.object({
   customerId: z.string().min(1, "Customer is required"),
   plateNumber: z.string().min(3, "Plate number is required"),
   model: z.string().min(2, "Model is required"),
-  color: z.string().optional(),
+  brand: z.string().min(1, "Brand is required"),
+  engineNumber: z.string().min(1, "Engine number is required"),
+  color: z.string().min(1, "Color is required"),
+  createdAt: z.string().min(1, "Date is required"),
+  technicianId: z.string().min(1, "Technician is required"),
+  supervisorId: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 const AddVehicle = () => {
@@ -18,11 +25,15 @@ const AddVehicle = () => {
     []
   );
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>(
+    []
+  );
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -30,27 +41,72 @@ const AddVehicle = () => {
       customerId: "",
       plateNumber: "",
       model: "",
+      brand: "",
+      engineNumber: "",
       color: "",
+      createdAt: "",
+      technicianId: "",
+      supervisorId: "",
+      notes: "",
     },
   });
 
   useEffect(() => {
-    // TODO: Replace with real API to fetch customers
-    setCustomers([
-      { id: "1", name: "John Banda" },
-      { id: "2", name: "Jane Phiri" },
-    ]);
+    const fetchCustomersAndEmployees = async () => {
+      try {
+        // Fetch customers
+        const customerRes = await axios.get(
+          `${import.meta.env.VITE_API_URL}/customers`
+        );
+        const customerList = customerRes.data.data.map((c: any) => ({
+          id: c._id,
+          name: c.fullName || c.name,
+        }));
+        setCustomers(customerList);
+
+        // Fetch employees (technicians & supervisors)
+        const employeeRes = await axios.get(
+          `${import.meta.env.VITE_API_URL}/employees`
+        );
+        const employeeList = employeeRes.data.data.map((e: any) => ({
+          id: e._id,
+          name: e.fullName,
+        }));
+        setEmployees(employeeList);
+      } catch (err) {
+        console.error(" Failed to load customers or employees:", err);
+      }
+    };
+
+    fetchCustomersAndEmployees();
   }, []);
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     const finalData = {
       ...data,
       customerName: selectedCustomer,
+      // 🚨 If customerId was not set via Autocomplete selection, skip submission
+      customerId: data.customerId?.trim() || null,
     };
-    console.log("Submitted vehicle:", finalData);
-    toast.success("Vehicle added successfully");
-    reset();
-    setSelectedCustomer("");
+
+    if (!finalData.customerId) {
+      toast.error("Please select an existing customer.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/vehicles/add`,
+        finalData
+      );
+      toast.success("Vehicle added successfully");
+      console.log(" Vehicle saved:", res.data);
+      reset();
+      setSelectedCustomer("");
+    } catch (err) {
+      console.error(" Error adding vehicle:", err);
+      toast.error("Failed to add vehicle");
+    }
   };
 
   return (
@@ -67,17 +123,46 @@ const AddVehicle = () => {
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <Autocomplete
-          freeSolo
-          options={customers.map((c) => c.name)}
-          onInputChange={(_, value) => setSelectedCustomer(value)}
+          options={customers}
+          getOptionLabel={(option) => option.name}
+          onChange={(_, selected) => {
+            if (selected) {
+              setSelectedCustomer(selected.name);
+              setValue("customerId", selected.id);
+            } else {
+              setSelectedCustomer("");
+              setValue("customerId", "");
+            }
+          }}
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Select or Enter Customer Name"
+              label="Select Customer"
               fullWidth
-              error={!selectedCustomer}
-              helperText={!selectedCustomer ? "Customer is required" : ""}
+              error={!!errors.customerId}
+              helperText={errors.customerId?.message}
             />
+          )}
+        />
+        <Autocomplete
+          options={employees}
+          getOptionLabel={(option) => option.name}
+          onChange={(_, selected) => {
+            setValue("technicianId", selected?.id || "");
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Assign Technician" fullWidth />
+          )}
+        />
+
+        <Autocomplete
+          options={employees}
+          getOptionLabel={(option) => option.name}
+          onChange={(_, selected) => {
+            setValue("supervisorId", selected?.id || "");
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Assign Supervisor" fullWidth />
           )}
         />
 
@@ -97,7 +182,49 @@ const AddVehicle = () => {
           fullWidth
         />
 
-        <TextField label="Color" {...register("color")} fullWidth />
+        <TextField
+          label="Brand"
+          {...register("brand")}
+          error={!!errors.brand}
+          helperText={errors.brand?.message}
+          fullWidth
+        />
+
+        <TextField
+          label="Engine Number"
+          {...register("engineNumber")}
+          error={!!errors.engineNumber}
+          helperText={errors.engineNumber?.message}
+          fullWidth
+        />
+
+        <TextField
+          label="Color"
+          {...register("color")}
+          error={!!errors.color}
+          helperText={errors.color?.message}
+          fullWidth
+        />
+
+        <TextField
+          label="Created At"
+          type="date"
+          {...register("createdAt")}
+          InputLabelProps={{ shrink: true }}
+          error={!!errors.createdAt}
+          helperText={errors.createdAt?.message}
+          fullWidth
+        />
+
+        <TextField
+          label="Notes"
+          multiline
+          rows={3}
+          {...register("notes")}
+          error={!!errors.notes}
+          helperText={errors.notes?.message}
+          fullWidth
+        />
 
         <div className="md:col-span-2">
           <Button type="submit" variant="contained" color="primary" fullWidth>

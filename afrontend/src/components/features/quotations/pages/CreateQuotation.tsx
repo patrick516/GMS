@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import axios from "axios";
 import {
   Box,
   Button,
@@ -30,26 +30,43 @@ const schema = z.object({
 const CreateQuotation = () => {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<
-    { name: string; phone?: string; email?: string }[]
-  >([]);
-  const [vehicles, setVehicles] = useState<
-    { id: string; plate: string; model: string; owner: string }[]
+    { name: string; phone?: string; email?: string; id: string }[]
   >([]);
 
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [vehicles, setVehicles] = useState<
+    {
+      id: string;
+      plate: string;
+      model: string;
+      ownerName: string;
+      ownerId: string;
+    }[]
+  >([]);
+
+  const [selectedCustomer, setSelectedCustomer] = useState<{
+    name: string;
+    email?: string;
+    phone?: string;
+    id: string;
+  } | null>(null);
+
   const [selectedVehicle, setSelectedVehicle] = useState<{
     id: string;
     plate: string;
     model: string;
-    owner: string;
+    ownerName: string;
+    ownerId: string;
   } | null>(null);
+
   const [quotations, setQuotations] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm({
@@ -65,50 +82,96 @@ const CreateQuotation = () => {
     },
   });
 
+  const watchedVehicleId = watch("vehicleId");
+
+  const fetchQuotations = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/quotations/all`
+      );
+      setQuotations(res.data.data);
+    } catch (err) {
+      console.error("Failed to fetch quotations:", err);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const customerRes = await axios.get(
+        `${import.meta.env.VITE_API_URL}/vehicles/customers-with-vehicles`
+      );
+      const realCustomers = customerRes.data.data.map((c: any) => ({
+        name: c.name,
+        email: c.email || "",
+        phone: c.phone || "",
+        id: c._id?.toString() || c.id?.toString() || "",
+      }));
+      setCustomers(realCustomers);
+
+      const vehicleRes = await axios.get(
+        `${import.meta.env.VITE_API_URL}/vehicles/list`
+      );
+      const vehicleList = vehicleRes.data.data.map((v: any) => ({
+        id: v._id,
+        plate: v.plateNumber,
+        model: v.model,
+        ownerId:
+          v.customerId?._id?.toString() || v.customerId?.toString() || "",
+        ownerName: v.customerId?.fullName || v.customerName || "Unknown",
+      }));
+      setVehicles(vehicleList);
+
+      await fetchQuotations(); // fetch only after customers and vehicles
+    } catch (err) {
+      console.error("Failed to load quotation-related data:", err);
+    }
+  };
+
   useEffect(() => {
-    setCustomers([
-      { name: "John Banda", phone: "0999123456", email: "john@example.com" },
-      { name: "Jane Phiri", phone: "0888123456", email: "jane@example.com" },
-    ]);
-    setVehicles([
-      { id: "1", plate: "BZ 1234", model: "Toyota Hilux", owner: "John Banda" },
-      { id: "2", plate: "KK 9876", model: "Mazda BT-50", owner: "Jane Phiri" },
-    ]);
+    fetchData();
   }, []);
 
-  const filteredVehicles = vehicles.filter((v) => v.owner === selectedCustomer);
+  const filteredVehicles = selectedCustomer?.id
+    ? vehicles.filter((v) => v.ownerId === selectedCustomer.id)
+    : [];
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     const vehicle = vehicles.find((v) => v.id === data.vehicleId);
-    if (vehicle && vehicle.owner !== data.customerName) {
+    if (vehicle && vehicle.ownerName !== data.customerName) {
       toast.error("Selected vehicle does not belong to the selected customer");
       return;
     }
 
-    const newQuote = {
-      id: quotations.length + 1,
-      ...data,
+    const payload = {
+      customerName: data.customerName,
+      phone: data.phone,
+      email: data.email,
       plateNumber: vehicle?.plate,
       model: vehicle?.model,
+      problemDescription: data.problemDescription,
+      serviceCost: data.serviceCost,
       status: "pending",
-      paymentStatus: "Unpaid", // for invoice tracking
-      createdAt: new Date().toISOString(), // for filtering later
+      paymentStatus: "UnPaid",
+      createdAt: new Date().toISOString(),
     };
 
-    setQuotations((prev) => [...prev, newQuote]);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/quotations/add`,
+        payload
+      );
+      const savedQuote = res.data.data;
 
-    // ✅ Placeholder for backend email/WhatsApp logic
+      setQuotations((prev) => [...prev, savedQuote]);
+      toast.success("Quotation created. Click 'Done' to generate invoice.");
 
-    // Data: phone: data.phone, email: data.email, customerName: data.customerName
-    console.log(`Send WhatsApp/Email to ${data.phone || data.email}`);
-    toast.info("Customer has been notified");
-
-    generatePDF(newQuote);
-    toast.success("Quotation created");
-
-    reset();
-    setSelectedCustomer("");
-    setSelectedVehicle(null);
+      reset();
+      setSelectedCustomer(null);
+      setSelectedVehicle(null);
+    } catch (err) {
+      console.error("Failed to save quotation:", err);
+      toast.error("Failed to create quotation");
+    }
   };
 
   const generatePDF = (quote: any) => {
@@ -136,18 +199,103 @@ const CreateQuotation = () => {
         styles: { fontSize: 9 },
         headStyles: { fillColor: [22, 160, 133] },
       });
+
       doc.save(`quotation_${quote.id}.pdf`);
     };
   };
 
-  const handleMarkAsInvoiced = (id: number) => {
-    setQuotations((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, status: "invoiced" } : q))
-    );
+  const handleMarkAsInvoiced = async (id: string) => {
+    const quote = quotations.find((q) => q._id === id || q.id === id);
+    if (!quote) return;
+
+    const payload = {
+      customerName: quote.customerName,
+      phone: quote.phone,
+      email: quote.email,
+      plateNumber: quote.plateNumber,
+      model: quote.model,
+      problemDescription: quote.problemDescription,
+      serviceCost: quote.serviceCost,
+    };
+
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/invoices/add`,
+        payload
+      );
+
+      const saved = res.data.data;
+
+      // ✅ Update status in DB
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL}/quotations/mark-invoiced/${quote._id}`
+      );
+
+      // ✅ Refresh list
+      await fetchQuotations();
+
+      toast.success("Invoice saved & quotation marked as invoiced.");
+    } catch (err) {
+      console.error("Failed to save invoice:", err);
+      toast.error("Failed to generate invoice.");
+    }
   };
 
-  const handleViewInvoice = (id: number) => {
-    navigate(`/invoices/${id}`);
+  const handleViewInvoice = async (id: string) => {
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL}/quotations/archive/${id}`
+      );
+      setQuotations((prev) => prev.filter((q) => (q._id || q.id) !== id));
+      navigate(`/invoices/${id}`);
+    } catch (err) {
+      console.error("Failed to archive quotation:", err);
+      toast.error("Could not archive the quotation");
+    }
+  };
+
+  const generateBulkPDF = () => {
+    const selectedQuotes = quotations.filter((q) =>
+      selectedIds.includes(q._id || q.id)
+    );
+
+    const doc = new jsPDF();
+    const logo = new Image();
+    logo.src = "/logos/uas-motors-logo.png";
+
+    logo.onload = () => {
+      selectedQuotes.forEach((quote, index) => {
+        const isNewPage = index > 0 && index % 2 === 0;
+        if (isNewPage) doc.addPage();
+
+        const yStart = 20 + (index % 2) * 120;
+
+        doc.addImage(logo, "PNG", 10, yStart, 30, 30);
+        doc.setFontSize(14);
+        doc.text("Uas Motors Garage System - Quotation", 50, yStart + 10);
+
+        autoTable(doc, {
+          startY: yStart + 30,
+          head: [["Field", "Details"]],
+          body: [
+            ["Quotation ID", quote._id || quote.id],
+            ["Customer", quote.customerName],
+            ["Phone", quote.phone],
+            ["Email", quote.email],
+            ["Plate Number", quote.plateNumber],
+            ["Model", quote.model],
+            ["Problem Description", quote.problemDescription],
+            ["Service Cost", `${quote.serviceCost} MWK`],
+          ],
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [22, 160, 133] },
+        });
+
+        // Remove thank you message for quotation
+      });
+
+      doc.save("selected_quotations.pdf");
+    };
   };
 
   const columns: GridColDef[] = [
@@ -159,26 +307,32 @@ const CreateQuotation = () => {
     { field: "model", headerName: "Model", width: 140 },
     { field: "problemDescription", headerName: "Problem", flex: 1 },
     { field: "serviceCost", headerName: "Service Cost (MWK)", width: 160 },
-
     {
       field: "action",
       headerName: "Action",
       width: 160,
       renderCell: (params) => {
         const row = params.row;
-        return row.status === "invoiced" ? (
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => handleViewInvoice(row.id)}
-          >
-            View Invoice
-          </Button>
-        ) : (
+
+        if (row.status === "invoiced") {
+          return (
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() =>
+                handleViewInvoice(row._invoiceId || row._id || row.id)
+              }
+            >
+              View Invoice
+            </Button>
+          );
+        }
+
+        return (
           <Button
             variant="outlined"
             color="success"
-            onClick={() => handleMarkAsInvoiced(row.id)}
+            onClick={() => handleMarkAsInvoiced(row._id || row.id)}
           >
             Done
           </Button>
@@ -188,7 +342,7 @@ const CreateQuotation = () => {
   ];
 
   return (
-    <Box className="max-w-6xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
+    <Box className="h-[90vh] max-w-7xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black flex flex-col">
       <Typography
         variant="h4"
         className="text-center mb-6 font-bold text-gray-800"
@@ -201,15 +355,28 @@ const CreateQuotation = () => {
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <Autocomplete
-          freeSolo
-          options={customers.map((c) => c.name)}
-          value={selectedCustomer}
-          onInputChange={(_, value) => {
-            setSelectedCustomer(value);
-            setValue("customerName", value);
-            const customer = customers.find((c) => c.name === value);
-            setValue("phone", customer?.phone || "");
-            setValue("email", customer?.email || "");
+          options={customers}
+          getOptionLabel={(option) => option.name}
+          onChange={(_, selected) => {
+            if (selected) {
+              setSelectedCustomer(selected);
+              setValue("customerName", selected.name);
+              setValue("phone", selected.phone || "");
+              setValue("email", selected.email || "");
+
+              const matches = vehicles.filter((v) => v.ownerId === selected.id);
+              if (matches.length === 1) {
+                const vehicle = matches[0];
+                setValue("vehicleId", vehicle.id);
+                toast.info(`Auto-selected vehicle: ${vehicle.plate}`);
+              }
+            } else {
+              setSelectedCustomer(null);
+              setValue("customerName", "");
+              setValue("phone", "");
+              setValue("email", "");
+              setValue("vehicleId", "");
+            }
           }}
           renderInput={(params) => (
             <TextField
@@ -225,6 +392,7 @@ const CreateQuotation = () => {
         <TextField
           select
           label="Vehicle (Plate)"
+          value={watchedVehicleId}
           {...register("vehicleId")}
           error={!!errors.vehicleId}
           helperText={errors.vehicleId?.message}
@@ -233,10 +401,19 @@ const CreateQuotation = () => {
             const vehicle = vehicles.find((v) => v.id === e.target.value);
             setValue("vehicleId", e.target.value);
             setSelectedVehicle(vehicle || null);
+
             if (vehicle) {
-              setSelectedCustomer(vehicle.owner);
-              setValue("customerName", vehicle.owner);
-              const customer = customers.find((c) => c.name === vehicle.owner);
+              const matchedCustomer = customers.find(
+                (c) => c.name === vehicle.ownerName
+              );
+              if (matchedCustomer) {
+                setSelectedCustomer(matchedCustomer);
+              }
+
+              setValue("customerName", vehicle.ownerName);
+              const customer = customers.find(
+                (c) => c.name === vehicle.ownerName
+              );
               setValue("phone", customer?.phone || "");
               setValue("email", customer?.email || "");
             }
@@ -284,7 +461,7 @@ const CreateQuotation = () => {
           Generated Quotations
         </Typography>
         <div
-          style={{ height: quotations.length > 0 ? 500 : 100, width: "100%" }}
+          style={{ height: quotations.length > 0 ? 300 : 100, width: "100%" }}
         >
           <TextField
             label="Search by Customer or Plate"
@@ -293,15 +470,35 @@ const CreateQuotation = () => {
             className="mb-4"
             onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
           />
+          <Button
+            variant="outlined"
+            color="secondary"
+            className="mt-4"
+            disabled={selectedIds.length === 0}
+            onClick={generateBulkPDF}
+          >
+            Download Selected Quotation
+          </Button>
 
           <DataGrid
-            rows={quotations.filter(
-              (q) =>
-                q.customerName.toLowerCase().includes(searchTerm) ||
-                q.plateNumber.toLowerCase().includes(searchTerm)
-            )}
+            checkboxSelection
+            onRowSelectionModelChange={(ids) => {
+              setSelectedIds(ids as string[]);
+            }}
+            rowSelectionModel={selectedIds}
+            rows={quotations
+              .filter((q) => !q.isArchived && q.status !== "invoiced")
+              .map((q) => ({
+                ...q,
+                id: q._id || q.id,
+              }))
+              .filter(
+                (q) =>
+                  q.customerName.toLowerCase().includes(searchTerm) ||
+                  q.plateNumber.toLowerCase().includes(searchTerm)
+              )}
             columns={columns}
-            pageSizeOptions={[5, 10]}
+            pageSizeOptions={[3, 10]}
             initialState={{
               pagination: {
                 paginationModel: { page: 0, pageSize: 5 },

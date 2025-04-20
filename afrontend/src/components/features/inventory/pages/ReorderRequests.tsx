@@ -1,113 +1,106 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { toast } from "react-toastify";
+import axios from "axios";
+import { FaCheckCircle, FaClock } from "react-icons/fa";
 
-interface Product {
-  id: string;
-  name: string;
-  quantity: number;
-  supplierName: string;
-  supplierEmail: string;
-  lastReorderedAt?: string;
+interface ReorderEntry {
+  _id: string;
+  productName: string;
+  systemUserName: string;
+  createdAt: string;
+  status: string;
+  supplierId?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
 }
 
 const Reorder = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [reordered, setReordered] = useState<string[]>([]); // tracks products already reordered
+  const [rows, setRows] = useState<ReorderEntry[]>([]);
 
   useEffect(() => {
-    // Step 1: Mock data for now — replace with API calls later
-    const addedInventory = [
-      {
-        id: "1",
-        name: "Brake Pads",
-        quantity: 50,
-        supplierName: "AutoZone Ltd",
-        supplierEmail: "contact@autozone.com",
-      },
-      {
-        id: "2",
-        name: "Oil Filter",
-        quantity: 30,
-        supplierName: "MotorParts Co",
-        supplierEmail: "orders@motorparts.co",
-      },
-      {
-        id: "3",
-        name: "Wiper Blades",
-        quantity: 20,
-        supplierName: "FastFit",
-        supplierEmail: "fastfit@parts.com",
-      },
-    ];
+    const fetchReorders = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/reorder/list`
+        );
+        setRows(res.data.data);
+      } catch (err) {
+        console.error("Error fetching reorder history:", err);
+      }
+    };
 
-    const customerPurchases = [
-      { productId: "1", quantity: 40 }, // Brake Pads
-      { productId: "2", quantity: 25 }, // Oil Filter
-    ];
-
-    const damagedItems = [
-      { productId: "1", quantity: 6 },
-      { productId: "3", quantity: 5 },
-    ];
-
-    // Step 2: Calculate remaining stock
-    const remainingProducts = addedInventory.map((item) => {
-      const purchased =
-        customerPurchases.find((p) => p.productId === item.id)?.quantity || 0;
-      const damaged =
-        damagedItems.find((d) => d.productId === item.id)?.quantity || 0;
-      const remainingQuantity = item.quantity - (purchased + damaged);
-
-      return {
-        ...item,
-        quantity: remainingQuantity,
-      };
-    });
-
-    // Step 3: Filter low stock
-    const lowStock = remainingProducts.filter((p) => p.quantity < 10);
-    setProducts(lowStock);
+    fetchReorders();
   }, []);
 
-  const handleReorder = (product: Product) => {
-    // TODO: Replace with real email trigger API (send reorder email to supplier)
-    if (reordered.includes(product.id)) return;
-
-    toast.info(`Reorder email sent to ${product.supplierEmail}`);
-    setReordered((prev) => [...prev, product.id]);
+  const handleMarkDone = async (id: string) => {
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/reorder/mark-done/${id}`
+      );
+      setRows((prev) =>
+        prev.map((row) => (row._id === id ? { ...row, status: "Done" } : row))
+      );
+    } catch (err) {
+      console.error("Failed to mark as done:", err);
+    }
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "Product ID", width: 120 },
-    { field: "name", headerName: "Product Name", flex: 1 },
-    { field: "supplierName", headerName: "Supplier", flex: 1 },
-    { field: "quantity", headerName: "Current Stock", width: 140 },
+    { field: "productName", headerName: "Product", flex: 1 },
+    { field: "systemUserName", headerName: "Requested By", flex: 1 },
     {
-      field: "lastReorderedAt",
-      headerName: "Last Reordered",
-      width: 180,
-      valueFormatter: (params) => {
-        const value = params?.value;
-        return value ? new Date(value).toLocaleString() : "N/A";
-      },
+      field: "status",
+      headerName: "Status",
+      width: 100,
+      renderCell: (params) =>
+        params.value === "Done" ? (
+          <FaCheckCircle
+            title="Done"
+            className="text-green-600"
+            style={{ fontSize: "1.25rem" }}
+          />
+        ) : (
+          <FaClock
+            title="Pending"
+            className="text-orange-500 animate-pulse"
+            style={{ fontSize: "1.25rem" }}
+          />
+        ),
+    },
+    {
+      field: "supplier",
+      headerName: "Supplier",
+      flex: 1,
+      valueGetter: (params: any) =>
+        params?.row?.supplierId?.name ? params.row.supplierId.name : "N/A",
     },
     {
       field: "action",
-      headerName: "",
-      width: 160,
-      renderCell: (params) => (
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={reordered.includes(params.row.id)}
-          onClick={() => handleReorder(params.row)}
-          fullWidth
-        >
-          {reordered.includes(params.row.id) ? "Reordered" : "Reorder"}
-        </Button>
-      ),
+      headerName: "Action",
+      width: 200,
+      renderCell: (params: any) => {
+        const reorder = params.row;
+        if (reorder.status === "Done") {
+          return (
+            <Typography variant="body2">
+              {new Date(reorder.createdAt).toLocaleDateString()}
+            </Typography>
+          );
+        }
+        return (
+          <Button
+            onClick={() => handleMarkDone(reorder._id)}
+            variant="outlined"
+            color="success"
+            size="small"
+          >
+            <FaCheckCircle />
+          </Button>
+        );
+      },
     },
   ];
 
@@ -117,13 +110,14 @@ const Reorder = () => {
         variant="h4"
         className="text-center mb-6 font-bold text-gray-800"
       >
-        Reorder Low Stock Items
+        Reorder Log
       </Typography>
-
       <div style={{ height: 500, width: "100%" }}>
         <DataGrid
-          rows={products}
+          rows={rows}
           columns={columns}
+          getRowId={(row) => row._id}
+          pagination
           initialState={{
             pagination: {
               paginationModel: { pageSize: 5, page: 0 },

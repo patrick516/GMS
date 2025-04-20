@@ -2,9 +2,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Box, Typography, TextField, MenuItem, Button } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { toast } from "react-toastify";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const schema = z.object({
   fullName: z.string().min(1, "Name is required"),
@@ -13,14 +15,13 @@ const schema = z.object({
   position: z.string().min(1, "Position is required"),
   type: z.enum(["Full-time", "Part-time", "Contract"]),
   salary: z.coerce.number().min(0, "Salary must be a number"),
-  allowances: z.coerce.number().optional(),
-  deductions: z.coerce.number().optional(),
   startDate: z.string(),
 });
 
 type EmployeeForm = z.infer<typeof schema>;
 
 const Employees = () => {
+  const navigate = useNavigate();
   const [employeeList, setEmployeeList] = useState<EmployeeForm[]>([]);
 
   const {
@@ -37,16 +38,37 @@ const Employees = () => {
       position: "",
       type: "Full-time",
       salary: 0,
-      allowances: 0,
-      deductions: 0,
       startDate: "",
     },
   });
 
-  const onSubmit = (data: EmployeeForm) => {
-    setEmployeeList((prev) => [...prev, data]);
-    toast.success("Employee added");
-    reset();
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/employees`
+        );
+        setEmployeeList(res.data.data);
+      } catch (error) {
+        console.error("Failed to fetch employees:", error);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
+  const onSubmit = async (data: EmployeeForm) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/employees/add`, data);
+      toast.success("Employee saved to system");
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/employees`
+      );
+      setEmployeeList(response.data.data);
+      reset();
+    } catch (error) {
+      console.error("Failed to save employee:", error);
+      toast.error("Failed to save employee");
+    }
   };
 
   const columns: GridColDef[] = [
@@ -56,8 +78,6 @@ const Employees = () => {
     { field: "position", headerName: "Position", width: 140 },
     { field: "type", headerName: "Type", width: 120 },
     { field: "salary", headerName: "Salary (MWK)", width: 140 },
-    { field: "allowances", headerName: "Allowances (MWK)", width: 160 },
-    { field: "deductions", headerName: "Deductions (MWK)", width: 160 },
     { field: "startDate", headerName: "Start Date", width: 140 },
   ];
 
@@ -104,18 +124,6 @@ const Employees = () => {
           fullWidth
         />
         <TextField
-          label="Allowances"
-          type="number"
-          {...register("allowances")}
-          fullWidth
-        />
-        <TextField
-          label="Deductions"
-          type="number"
-          {...register("deductions")}
-          fullWidth
-        />
-        <TextField
           label="Start Date"
           type="date"
           {...register("startDate")}
@@ -130,6 +138,15 @@ const Employees = () => {
       </form>
 
       <Box className="mt-10">
+        <Button
+          variant="contained"
+          color="secondary"
+          style={{ marginBottom: "1rem" }}
+          onClick={() => navigate("/users/accounts")}
+        >
+          Go to Payslip Processing
+        </Button>
+
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
           Registered Employees
         </Typography>

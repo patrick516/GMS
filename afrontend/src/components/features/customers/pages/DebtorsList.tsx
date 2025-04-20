@@ -141,7 +141,7 @@ const DebtorList = () => {
         <table className="min-w-full border border-gray-300 rounded overflow-hidden">
           <thead className="bg-gray-100">
             <tr className="text-left text-xl text-gray-700">
-              <th className="p-3">No-:</th>
+              <th className="p-3">No:</th>
               <th className="p-3">Name</th>
               <th className="p-3">Paid</th>
               <th className="p-3">Balance</th>
@@ -161,7 +161,7 @@ const DebtorList = () => {
               debtors.map((debtor, index) => (
                 <tr
                   key={debtor._id}
-                  className="border-t border-gray-200 text-xl"
+                  className="border-t border-gray-200 text-lg"
                 >
                   <td className="p-3">{index + 1}</td>
                   <td className="p-3">{debtor.name}</td>
