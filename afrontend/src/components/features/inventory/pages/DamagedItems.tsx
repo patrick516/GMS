@@ -157,8 +157,14 @@ const DamagedItems = () => {
           </Select>
         </FormControl>
 
-        <div className="md:col-span-2">
-          <Button type="submit" variant="contained" color="primary" fullWidth>
+        <div className="max-w-6xl mt-4 mx-auto flex justify-start">
+          <Button
+            type="submit"
+            variant="contained"
+            className="w-60"
+            color="primary"
+            fullWidth
+          >
             Submit Damage Report
           </Button>
         </div>

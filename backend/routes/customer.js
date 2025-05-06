@@ -6,6 +6,8 @@ router.post("/", customerController.addCustomer);
 router.put("/:id/pay", customerController.updateCustomerPayment);
 router.get("/debtors", customerController.getDebtors);
 router.get("/summary", customerController.getCustomerSummary);
+router.get("/frequent", customerController.getFrequentCustomers);
+
 router.get("/", customerController.getAllCustomers);
 
 module.exports = router;

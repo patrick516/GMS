@@ -449,8 +449,13 @@ const CreateQuotation = () => {
           fullWidth
         />
 
-        <div className="md:col-span-2">
-          <Button type="submit" variant="contained" color="primary" fullWidth>
+        <div className="md:col-span-2 flex justify-start">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            className="w-60"
+          >
             Generate Quotation
           </Button>
         </div>

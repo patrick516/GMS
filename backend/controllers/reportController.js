@@ -3,38 +3,64 @@ const Customer = require("../models/Customer");
 const Quotation = require("../models/Quotation");
 const Invoice = require("../models/Invoice");
 
-// 📦 INVENTORY REPORT
+//  INVENTORY REPORT
 exports.getInventoryReport = async (req, res) => {
   try {
+    console.log("USING CORRECT REPORT CONTROLLER ");
+
     const inventories = await Inventory.find();
+    const customers = await Customer.find();
+
     let totalPurchased = 0;
     let totalSold = 0;
     let totalProfit = 0;
 
+    const detailed = [];
+
     inventories.forEach((inv) => {
       const purchaseValue = inv.quantity * inv.purchasePrice;
+      const saleValue = inv.quantity * inv.salePricePerUnit;
+      const profit = saleValue - purchaseValue;
+
       totalPurchased += purchaseValue;
+      totalProfit += profit;
 
-      totalProfit += (inv.salePricePerUnit - inv.purchasePrice) * inv.quantity;
+      const soldQty = customers
+        .filter(
+          (c) => c.purchasedInventoryId?.toString() === inv._id.toString()
+        )
+        .reduce((sum, c) => sum + (c.quantityPurchased || 0), 0);
+
+      totalSold += soldQty;
+
+      detailed.push({
+        name: inv.name,
+        quantity: inv.quantity,
+        purchasePrice: inv.purchasePrice,
+        salePrice: inv.salePricePerUnit,
+        purchaseValue,
+        saleValue,
+        profit,
+        soldQty,
+      });
     });
 
-    const customers = await Customer.find();
-    customers.forEach((cust) => {
-      totalSold += cust.quantityPurchased || 0;
-    });
+    // 👇 Log the detailed list and count
+    console.log(" DETAILED INVENTORY:", detailed.length, detailed);
 
     res.status(200).json({
       purchased: totalPurchased,
       sold: totalSold,
       profit: totalProfit,
+      detailed,
     });
   } catch (err) {
-    console.error("Error generating inventory report:", err);
+    console.error(" Error generating inventory report:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// 🧾 QUOTATION + INVOICE REPORT
+// QUOTATION + INVOICE REPORT
 exports.getReportSummary = async (req, res) => {
   try {
     const totalQuotations = await Quotation.countDocuments();
