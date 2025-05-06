@@ -12,121 +12,226 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useEffect, useState } from "react";
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import {
+  fetchVehicleList,
+  fetchInventoryReport,
+  fetchAllQuotations,
+} from "@services/ReportsService";
 
 const Dashboard = () => {
-  // TODO: Replace with API: /api/inventory/summary
-  const [inventoryStats, setInventoryStats] = useState([
-    { name: "Oil Filters", quantity: 120 },
-    { name: "Brake Pads", quantity: 30 },
-    { name: "Spark Plugs", quantity: 7 }, // critical
-    { name: "Batteries", quantity: 18 },
-  ]);
+  const [inventoryStats, setInventoryStats] = useState<any[]>([]);
+  const [financeStats, setFinanceStats] = useState<any[]>([]);
+  const [vehicleQueue, setVehicleQueue] = useState<any[]>([]);
+  const [topServices, setTopServices] = useState<any[]>([]);
 
-  // TODO: Replace with API: /api/finance/overview
-  const [financeStats, setFinanceStats] = useState([
-    { name: "Revenue", value: 1500000 },
-    { name: "Cost", value: 950000 },
-    { name: "Expected Revenue", value: 400000 },
-    { name: "Profit", value: 550000 },
-  ]);
+  const COLORS = ["#00C49F", "#FFBB28", "#FF8042", "#0088FE", "#aa66cc"];
 
-  // TODO: Replace with API: /api/vehicles/queue
-  const [vehicleQueue, setVehicleQueue] = useState([
-    { plate: "BZ 1234", model: "Hilux", time: "10:05 AM" },
-    { plate: "MC 7777", model: "Mazda", time: "10:45 AM" },
-    { plate: "CP 1111", model: "Corolla", time: "11:10 AM" },
-  ]);
+  // Inventory bar chart data
+  useEffect(() => {
+    fetchInventoryReport().then((res) => {
+      const items = res.data.data;
+      const chartData = items.map((item: any) => ({
+        name: item.name,
+        quantity: item.quantity,
+        purchased: item.totalPurchased,
+        sold: item.totalSold,
+      }));
+      setInventoryStats(chartData);
+    });
+  }, []);
 
-  // TODO: Replace with API: /api/quotations/top-services
-  const [topServices, setTopServices] = useState([
-    { name: "Brake Service", count: 28 },
-    { name: "Engine Diagnostics", count: 22 },
-    { name: "Oil Change", count: 15 },
-    { name: "Suspension Repair", count: 10 },
-  ]);
+  useEffect(() => {
+    const fetchFinanceData = async () => {
+      try {
+        const inventoryRes = await fetchInventoryReport();
+        const items = inventoryRes.data.data;
 
-  const COLORS = ["#00C49F", "#FFBB28", "#FF8042", "#0088FE"];
+        const cost = items.reduce(
+          (sum: number, item: any) => sum + (item.cost || 0),
+          0
+        );
+        const revenue = items.reduce(
+          (sum: number, item: any) => sum + (item.revenue || 0),
+          0
+        );
+        const profit = revenue - cost;
+
+        setFinanceStats([
+          { name: "Total Cost", value: cost },
+          { name: "Expected Revenue", value: revenue },
+          { name: "Expected Profit", value: profit },
+        ]);
+      } catch (err) {
+        console.error("Error loading finance stats", err);
+      }
+    };
+
+    fetchFinanceData();
+  }, []);
+
+  useEffect(() => {
+    fetchVehicleList().then((res) => {
+      const all = res.data.data;
+      const pending = all.filter((v: any) => !v.isDone);
+      setVehicleQueue(pending);
+    });
+  }, []);
+
+  const handleMarkDone = async (id: string, model: string) => {
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/vehicles/delete/${id}`
+      );
+
+      setVehicleQueue((prev) => prev.filter((v) => v._id !== id));
+
+      toast.success(`${model} marked as repaired and removed from queue`);
+    } catch (err) {
+      console.error("Failed to mark vehicle as done", err);
+      toast.error("Failed to mark as done");
+    }
+  };
+
+  useEffect(() => {
+    fetchAllQuotations().then((res) => {
+      const quotes = res.data.data;
+      const countByService: Record<string, number> = {};
+      quotes.forEach((q: any) => {
+        const name = q.problemDescription || "Other";
+        countByService[name] = (countByService[name] || 0) + 1;
+      });
+
+      const chartData = Object.entries(countByService)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      setTopServices(chartData);
+    });
+  }, []);
 
   return (
-    <Box className="p-6 max-w-8xl mx-auto">
-      <Typography variant="h4" className="font-bold mb-6">
-        Uas Motors GMS Overview
+    <>
+      <Typography
+        variant="h4"
+        className=" font-bold mb-6 text-center text-black"
+      >
+        Admin Dashboard
       </Typography>
+      <Box className="p-6 max-w-8xl mx-auto">
+        <ToastContainer position="top-right" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Paper className="p-4">
-          <Typography variant="h6" className="mb-4 font-semibold">
-            Inventory Quantities (Bar Chart)
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={inventoryStats}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="quantity" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Paper>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Inventory Bar Chart */}
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4 font-semibold">
+              Inventory Quantities (Bar Chart)
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={inventoryStats}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="quantity" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
 
-        <Paper className="p-4">
-          <Typography variant="h6" className="mb-4 font-semibold">
-            Financial Overview (Pie Chart)
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={financeStats}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
-                dataKey="value"
-              >
-                {financeStats.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </Paper>
+          {/* Financial Pie Chart */}
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4 font-semibold">
+              Financial Overview (Cost vs Revenue vs Profit)
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={financeStats}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label={({ name, value }) =>
+                    `${name}: MWK ${value.toLocaleString("en-MW")}`
+                  }
+                  dataKey="value"
+                >
+                  {financeStats.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number) =>
+                    `MWK ${value.toLocaleString("en-MW")}`
+                  }
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </Paper>
 
-        <Paper className="p-4">
-          <Typography variant="h6" className="mb-4 font-semibold">
-            Vehicle Queue (Live Log)
-          </Typography>
-          <ul className="space-y-2">
-            {vehicleQueue.map((v, index) => (
-              <li key={index} className="border p-2 rounded shadow-sm">
-                {v.plate} - {v.model}{" "}
-                <span className="text-sm text-gray-500">({v.time})</span>
-              </li>
-            ))}
-          </ul>
-        </Paper>
+          {/* Vehicle queue */}
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4 font-semibold">
+              Vehicle Queue (Live Log)
+            </Typography>
+            <ul className="space-y-2">
+              {vehicleQueue.map((v, index) => {
+                const createdAt = new Date(v.createdAt);
+                const now = new Date();
+                const daysInGarage = Math.floor(
+                  (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+                );
 
-        <Paper className="p-4">
-          <Typography variant="h6" className="mb-4 font-semibold">
-            Top Quoted Services (Bar Chart)
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={topServices}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="count" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Paper>
-      </div>
+                return (
+                  <li
+                    key={index}
+                    className="border p-2 rounded shadow-sm flex justify-between"
+                  >
+                    <div>
+                      {v.plateNumber} - {v.model}
+                      <span className="text-sm text-gray-500 ml-2">
+                        ({createdAt.toLocaleString()}) —{" "}
+                        <strong>{daysInGarage} day(s)</strong> in garage
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleMarkDone(v._id, v.model)}
+                      className="text-blue-500 hover:underline text-sm"
+                    >
+                      Mark Done
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </Paper>
 
-      <Divider className="my-6" />
-    </Box>
+          {/* Top quoted services */}
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4 font-semibold">
+              Top Quoted Services (Bar Chart)
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topServices}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+        </div>
+
+        <Divider className="my-6" />
+      </Box>
+    </>
   );
 };
 

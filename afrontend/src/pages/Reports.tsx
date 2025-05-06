@@ -1,14 +1,44 @@
 import { useEffect, useState, useRef } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import axios from "axios";
 import { Box, Typography, Button, TextField, MenuItem } from "@mui/material";
-import Chart from "chart.js/auto";
-import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import {
+  renderPayrollChart,
+  renderTopSpendersChart,
+  renderInvoiceTable,
+  renderQuotationTable,
+  renderCustomerTable,
+  renderAllCustomerSummary,
+  renderAllCustomersTable,
+} from "@utils/ReportHelpers";
 
-// import { saveAs } from "file-saver";
+import {
+  fetchInventoryReport,
+  fetchInvoicesSummary,
+  fetchAllInvoices,
+  fetchQuotationsSummary,
+  fetchPayrollMonthly,
+  fetchCustomersSummary,
+  fetchOverallReport,
+  fetchPayrollTrend,
+  fetchAllPayslips,
+  fetchAllQuotations,
+  fetchFrequentCustomers,
+  fetchAllCustomers,
+  fetchDebtors,
+} from "@services/ReportsService";
+
+type InventoryItem = {
+  name: string;
+  quantity: number;
+  purchasePrice: number;
+  salePrice: number;
+  purchaseValue: number;
+  saleValue: number;
+  profit: number;
+};
 
 type Report = {
   id: number;
@@ -106,26 +136,52 @@ const Reports = () => {
         overallReportRes,
         payrollTrendRes,
         payslipsAllRes,
+        topInvoicesRes,
+        allQuotationsRes,
+        frequentCustomersRes,
+        allCustomersRes,
+        debtorsRes,
       ] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/inventory/report`),
-        axios.get(`${import.meta.env.VITE_API_URL}/invoices/summary`),
-        axios.get(`${import.meta.env.VITE_API_URL}/quotations/summary`),
-        axios.get(`${import.meta.env.VITE_API_URL}/payslips/monthly`),
-        axios.get(`${import.meta.env.VITE_API_URL}/customers/summary`),
-        axios.get(`${import.meta.env.VITE_API_URL}/reports/summary`),
-        axios.get(`${import.meta.env.VITE_API_URL}/payslips/trend`),
-        axios.get(`${import.meta.env.VITE_API_URL}/payslips/all`),
+        fetchInventoryReport(),
+        fetchInvoicesSummary(),
+        fetchQuotationsSummary(),
+        fetchPayrollMonthly(),
+        fetchCustomersSummary(),
+        fetchOverallReport(),
+        fetchPayrollTrend(),
+        fetchAllPayslips(),
+        fetchAllInvoices(),
+        fetchAllQuotations(),
+        fetchFrequentCustomers(),
+        fetchAllCustomers(),
+        fetchDebtors(),
       ]);
 
-      const inventory = inventoryRes.data;
+      const debtors = debtorsRes.data.data;
+
+      const totalDebtors = debtors.length;
+      const totalAmountOwed = debtors.reduce(
+        (sum: number, cust: any) => sum + (cust.balance || 0),
+        0
+      );
+
+      const detailedInventory = inventoryRes.data.data;
       const invoices = invoicesRes.data;
       const quotations = quotationsRes.data;
-      const payroll = payrollRes.data;
-      const customers = customersRes.data;
-      const overallReport = overallReportRes.data;
+      const overallReport = overallReportRes.data.data;
+      const payroll = payrollRes.data.data;
       const payrollTrend = payrollTrendRes.data;
-
       const payslips = payslipsAllRes.data.data;
+      const allCustomers = allCustomersRes.data.data;
+      const totalCustomers = allCustomers.length;
+      const topCustomer = allCustomers.reduce(
+        (top: any, customer: any) =>
+          customer.payment > (top?.payment || 0) ? customer : top,
+        allCustomers[0]
+      );
+
+      const topSpenderName = topCustomer?.name || "—";
+      const topSpenderAmount = topCustomer?.payment || 0;
 
       autoTable(doc, {
         startY: 50,
@@ -133,7 +189,13 @@ const Reports = () => {
         body: [
           [
             "Inventory Summary",
-            `Purchased: ${inventory.purchased}, Sold: ${inventory.sold}, Profit: ${inventory.profit} MWK`,
+            `Items: ${
+              detailedInventory.length
+            }, Total Revenue: MWK ${detailedInventory
+              .reduce((sum: number, i: any) => sum + (i.revenue || 0), 0)
+              .toLocaleString()}, Profit: MWK ${detailedInventory
+              .reduce((sum: number, i: any) => sum + (i.profit || 0), 0)
+              .toLocaleString()}`,
           ],
           [
             "Invoice Summary",
@@ -149,8 +211,18 @@ const Reports = () => {
           ],
           [
             "Customer Overview",
-            `New: ${customers.newCustomers}, Top Spender: ${customers.topSpender}`,
+            `Total: ${totalCustomers}, Top Spender: ${topSpenderName} (MWK ${topSpenderAmount.toLocaleString(
+              "en-MW"
+            )})`,
           ],
+
+          [
+            "Debtors Summary",
+            `Customers Owing: ${totalDebtors}, Total Outstanding: MWK ${totalAmountOwed.toLocaleString(
+              "en-MW"
+            )}`,
+          ],
+
           [
             "Quotation vs Invoice Summary",
             `Quotations: ${overallReport.totalQuotations} (${overallReport.totalQuotationAmount} MWK), Invoices: ${overallReport.totalInvoices} (${overallReport.totalInvoiceAmount} MWK), Difference: ${overallReport.difference} MWK`,
@@ -164,61 +236,75 @@ const Reports = () => {
         headStyles: { fillColor: [22, 160, 133] },
       });
 
-      // Bar chart
-      if (barChartRef.current) {
-        const canvas = barChartRef.current;
+      if (Array.isArray(detailedInventory) && detailedInventory.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(33, 33, 33);
+        doc.text(
+          "Inventory Breakdown",
+          14,
+          (doc as any).lastAutoTable?.finalY + 15 || 120
+        );
 
-        //  1. Destroy old chart if any
-        const existingChart = Chart.getChart(canvas);
-        if (existingChart) {
-          existingChart.destroy();
-        }
-
-        //  2. Create chart
-        new Chart(canvas, {
-          type: "bar",
-          data: {
-            labels: payrollTrend.data.map((m: any) => m.label),
-            datasets: [
-              {
-                label: "Monthly Net Pay (MWK)",
-                data: payrollTrend.data.map((m: any) => m.netPay),
-                backgroundColor: "#42a5f5",
-              },
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable?.finalY + 20 || 130,
+          head: [
+            [
+              "Item",
+              "Brand",
+              "Purchased",
+              "Sold",
+              "In Stock",
+              "Revenue",
+              "Cost",
+              "Profit",
             ],
-          },
-          options: {
-            responsive: false,
-            animation: false,
-            plugins: {
-              title: {
-                display: true,
-                text: "Payroll Trend",
-              },
-              legend: {
-                display: true,
-                position: "bottom",
-              },
-            },
-          },
+          ],
+          body: detailedInventory.map((item) => [
+            item.name,
+            item.brand || "—",
+            item.totalPurchased,
+            item.totalSold,
+            item.currentStock,
+            item.revenue.toLocaleString("en-MW"),
+            item.cost.toLocaleString("en-MW"),
+            item.profit.toLocaleString("en-MW"),
+          ]),
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [22, 160, 133] },
         });
 
-        // 3. Wait for rendering
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        const mostStocked = detailedInventory.reduce(
+          (top, item) =>
+            item.totalPurchased > top.totalPurchased ? item : top,
+          detailedInventory[0]
+        );
 
-        //  4. Convert canvas to image
-        const canvasImage = await html2canvas(canvas, {
-          willReadFrequently: true,
-        } as any).then((c) => c.toDataURL("image/png"));
+        const lastY = (doc as any).lastAutoTable?.finalY;
+        const insightY = typeof lastY === "number" ? lastY + 30 : 150;
 
-        //  5. Validate image before adding
-        if (canvasImage && canvasImage !== "data:,") {
-          const chartY = (doc as any).lastAutoTable?.finalY + 20 || 120;
-          doc.addImage(canvasImage, "PNG", 10, chartY, 180, 90);
-        } else {
-          console.warn(" Chart image is invalid or empty — skipping.");
-        }
+        //  Style the text
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(11);
+        doc.setTextColor(80, 80, 80);
+
+        //  Render insight message below last autoTable
+        doc.text(
+          `${mostStocked.name} was the most stocked item (${
+            mostStocked.totalPurchased
+          } units). It generated MWK ${mostStocked.revenue.toLocaleString(
+            "en-MW"
+          )} in revenue and had ${mostStocked.currentStock} still in stock.`,
+          14,
+          insightY
+        );
       }
+
+      // Bar chart
+      if (barChartRef.current) {
+        await renderPayrollChart(doc, barChartRef.current, payrollTrend);
+      }
+
       if (Array.isArray(payslips) && payslips.length > 0) {
         doc.setFontSize(12);
         doc.text(
@@ -253,7 +339,7 @@ const Reports = () => {
       const monthName = now.toLocaleString("default", { month: "long" });
       const year = now.getFullYear();
 
-      const remarkY = (doc as any).lastAutoTable?.finalY + 15 || 150;
+      const remarkY = (doc as any).lastAutoTable?.finalY + 10 || 150;
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
@@ -265,6 +351,35 @@ const Reports = () => {
         14,
         remarkY
       );
+
+      // 2. Then apply it to text rendering
+
+      // Data Table
+      const topInvoices = [...topInvoicesRes.data.data]
+        .sort((a, b) => b.serviceCost - a.serviceCost)
+        .slice(0, 5);
+
+      renderInvoiceTable(doc, topInvoices);
+
+      const allQuotations = allQuotationsRes.data.data;
+
+      renderQuotationTable(doc, allQuotations);
+
+      const frequentCustomers = frequentCustomersRes.data.data;
+
+      const top5Spenders = [...frequentCustomers]
+        .sort((a, b) => b.totalSpent - a.totalSpent)
+        .slice(0, 5);
+
+      renderCustomerTable(doc, frequentCustomers);
+
+      if (pieChartRef.current) {
+        await renderTopSpendersChart(doc, pieChartRef.current, top5Spenders);
+      }
+
+      renderAllCustomersTable(doc, allCustomers);
+
+      renderAllCustomerSummary(doc, allCustomers);
 
       const footerY = (doc as any).lastAutoTable?.finalY + 80 || 50;
 
@@ -287,21 +402,36 @@ const Reports = () => {
 
   const exportSummaryToExcel = async () => {
     try {
-      const [inventory, invoices, quotations, payroll, customers] =
+      const [inventoryRes, invoices, quotations, payroll, customers] =
         await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/inventory/report`),
-          axios.get(`${import.meta.env.VITE_API_URL}/invoices/summary`),
-          axios.get(`${import.meta.env.VITE_API_URL}/quotations/summary`),
-          axios.get(`${import.meta.env.VITE_API_URL}/payslips/monthly`),
-          axios.get(`${import.meta.env.VITE_API_URL}/customers/summary`),
+          fetchInventoryReport(),
+          fetchInvoicesSummary(),
+          fetchQuotationsSummary(),
+          fetchPayrollMonthly(),
+          fetchCustomersSummary(),
         ]);
+
+      const detailed = inventoryRes.data.data;
+
+      const totalRevenue = detailed.reduce(
+        (sum: number, item: any) => sum + (item.revenue || 0),
+        0
+      );
+      const totalCost = detailed.reduce(
+        (sum: number, item: any) => sum + (item.cost || 0),
+        0
+      );
+      const totalProfit = detailed.reduce(
+        (sum: number, item: any) => sum + (item.profit || 0),
+        0
+      );
 
       const data = [
         {
           Section: "Inventory",
-          Purchased: inventory.data.purchased,
-          Sold: inventory.data.sold,
-          Profit: inventory.data.profit,
+          Revenue: totalRevenue,
+          Cost: totalCost,
+          Profit: totalProfit,
         },
         {
           Section: "Invoices",
@@ -432,6 +562,17 @@ const Reports = () => {
         width={500}
         height={300}
         style={{ visibility: "hidden", position: "absolute", top: 0, left: 0 }}
+      />
+      <canvas
+        ref={pieChartRef}
+        width={500}
+        height={300}
+        style={{
+          position: "absolute",
+          top: "-1000px", // push it far off screen
+          opacity: 0, // invisible but still rendered
+          pointerEvents: "none",
+        }}
       />
 
       <canvas

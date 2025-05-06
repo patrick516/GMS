@@ -160,7 +160,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
 
   return (
     <div className="max-w-6xl mt-20 mx-auto bg-white text-black p-10 rounded-xl shadow-xl">
-      <h2 className="text-4xl font-bold mb-6 text-center">
+      <h2 className="text-4xl font-bold mb-10 text-center">
         {itemToEdit ? "Edit Inventory" : "Add Inventory"}
       </h2>
       <form

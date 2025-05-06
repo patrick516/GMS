@@ -12,4 +12,7 @@ router.get(
   vehicleController.getCustomersWithVehicles
 );
 
+router.patch("/mark-done/:id", vehicleController.markVehicleAsDone);
+router.delete("/delete/:id", vehicleController.deleteVehicle);
+
 module.exports = router;

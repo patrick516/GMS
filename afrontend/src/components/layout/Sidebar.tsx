@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FaTools, FaBox, FaUsers, FaChartBar, FaCog } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
 import { AiOutlinePlus } from "react-icons/ai";
-import { MdEdit } from "react-icons/md";
 import { RiFileList2Line } from "react-icons/ri";
 import { MdInventory2 } from "react-icons/md";
 import { TbBoxOff } from "react-icons/tb";
@@ -14,8 +13,6 @@ import { TbReorder } from "react-icons/tb";
 import { LiaCaretSquareDownSolid } from "react-icons/lia";
 import { FaCarSide } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa";
-import { FaList } from "react-icons/fa";
-import { FaCogs } from "react-icons/fa";
 import { FaSupple } from "react-icons/fa";
 import { FaFileSignature, FaFileInvoiceDollar } from "react-icons/fa";
 
@@ -29,7 +26,7 @@ const Sidebar = () => {
   const [isInvoicesOpen, setInvoicesOpen] = useState(false);
 
   return (
-    <aside className="w-80  h-screen bg-[#24397b] text-white flex flex-col shadow-md">
+    <aside className="top-0 left-0 z-50 w-80 h-screen bg-[#24397b] text-white flex flex-col shadow-md overflow-y-auto">
       {/* Logo Icon */}
       <div className="flex justify-center items-center py-4">
         <div className="flex justify-center items-center gap-4 py-4">

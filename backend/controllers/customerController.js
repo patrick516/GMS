@@ -125,7 +125,7 @@ exports.getCustomerSummary = async (req, res) => {
     const topSpender = await Customer.aggregate([
       {
         $group: {
-          _id: "$name",
+          _id: "$name", // good
           totalSpent: { $sum: "$payment" },
         },
       },
@@ -144,5 +144,29 @@ exports.getCustomerSummary = async (req, res) => {
       success: false,
       message: "Failed to generate customer summary",
     });
+  }
+};
+
+// GET /api/customers/frequent
+exports.getFrequentCustomers = async (req, res) => {
+  try {
+    const grouped = await Customer.aggregate([
+      {
+        $group: {
+          _id: "$name",
+          visits: { $sum: 1 },
+          totalSpent: { $sum: "$payment" },
+        },
+      },
+      { $sort: { visits: -1 } },
+      { $limit: 10 },
+    ]);
+
+    res.status(200).json({ success: true, data: grouped });
+  } catch (error) {
+    console.error("Error getting frequent customers:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch frequent customers" });
   }
 };

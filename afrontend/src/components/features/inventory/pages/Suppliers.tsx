@@ -148,7 +148,12 @@ const Supplier = () => {
           fullWidth
         />
         <div className="md:col-span-2">
-          <Button type="submit" variant="contained" color="primary" fullWidth>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            className="w-60"
+          >
             Save Supplier
           </Button>
         </div>

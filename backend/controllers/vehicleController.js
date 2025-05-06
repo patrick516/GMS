@@ -87,16 +87,38 @@ exports.getCustomersWithVehicles = async (req, res) => {
 
 exports.getVehicles = async (req, res) => {
   try {
-    const vehicles = await Vehicle.find()
-      .populate("customerId", "fullName")
-      .populate("technicianId", "fullName")
-      .populate("supervisorId", "fullName")
-      .lean();
-
+    const vehicles = await Vehicle.find({ isDone: { $ne: true } }).sort({
+      arrivalTime: -1,
+    });
     res.status(200).json({ success: true, data: vehicles });
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch vehicles" });
+    console.error("Error getting vehicles:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch" });
+  }
+};
+
+// vehicleController.js
+exports.markVehicleAsDone = async (req, res) => {
+  try {
+    await Vehicle.findByIdAndUpdate(req.params.id, {
+      isDone: true,
+      completedAt: new Date(),
+    });
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Error marking vehicle as done:", err);
+    res.status(500).json({ success: false, message: "Failed to mark done" });
+  }
+};
+
+exports.deleteVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Vehicle.findByIdAndDelete(id);
+    res.status(200).json({ success: true, message: "Vehicle deleted" });
+  } catch (err) {
+    console.error("Failed to delete vehicle", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
