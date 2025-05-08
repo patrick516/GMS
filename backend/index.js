@@ -23,6 +23,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const verifyToken = require("./middleware/verifyToken");
+
 // Serve static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/inventory", inventoryRoutes);

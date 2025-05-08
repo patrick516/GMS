@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Box, Typography, TextField, MenuItem, Button } from "@mui/material";
+import { Box, Typography, TextField, Button } from "@mui/material";
 import { toast } from "react-toastify";
 import axios from "axios";
 
@@ -100,17 +100,17 @@ const Supplier = () => {
   };
 
   return (
-    <Box className="max-w-6xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
+    <Box className="max-w-6xl p-8 mx-auto mt-10 text-black bg-white shadow-xl rounded-xl">
       <Typography
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Add Supplier
       </Typography>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2"
       >
         <TextField
           label="Supplier Name"
@@ -169,10 +169,10 @@ const Supplier = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-100">
               <tr>
-                <th className="text-left p-2">Name</th>
-                <th className="text-left p-2">Email</th>
-                <th className="text-left p-2">Phone</th>
-                <th className="text-left p-2">Address</th>
+                <th className="p-2 text-left">Name</th>
+                <th className="p-2 text-left">Email</th>
+                <th className="p-2 text-left">Phone</th>
+                <th className="p-2 text-left">Address</th>
               </tr>
             </thead>
             <tbody>

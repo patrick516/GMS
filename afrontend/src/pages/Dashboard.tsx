@@ -55,6 +55,8 @@ const Dashboard = () => {
   const [financeStats, setFinanceStats] = useState<FinanceStat[]>([]);
   const [vehicleQueue, setVehicleQueue] = useState<VehicleItem[]>([]);
   const [topServices, setTopServices] = useState<ServiceStat[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const vehiclesPerPage = 3;
 
   const COLORS = ["#6EC1E4", "#F67280", "#355C7D", "#C06C84", "#6EC1E4"];
 
@@ -106,6 +108,7 @@ const Dashboard = () => {
       const all: VehicleItem[] = res.data.data;
       const pending = all.filter((v) => !v.isDone);
       setVehicleQueue(pending);
+      setCurrentPage(1);
     });
   }, []);
 
@@ -141,6 +144,14 @@ const Dashboard = () => {
       setTopServices(chartData);
     });
   }, []);
+
+  const indexOfLastVehicle = currentPage * vehiclesPerPage;
+  const indexOfFirstVehicle = indexOfLastVehicle - vehiclesPerPage;
+  const currentVehicles = vehicleQueue.slice(
+    indexOfFirstVehicle,
+    indexOfLastVehicle
+  );
+  const totalPages = Math.ceil(vehicleQueue.length / vehiclesPerPage);
 
   return (
     <>
@@ -187,7 +198,7 @@ const Dashboard = () => {
                   }
                   dataKey="value"
                 >
-                  {financeStats.map((entry, index) => (
+                  {financeStats.map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
@@ -208,8 +219,9 @@ const Dashboard = () => {
             <Typography variant="h6" className="mb-4 font-semibold">
               Vehicle Queue (Live Log)
             </Typography>
+
             <ul className="space-y-2">
-              {vehicleQueue.map((v, index) => {
+              {currentVehicles.map((v: VehicleItem, index: number) => {
                 const createdAt = new Date(v.createdAt);
                 const now = new Date();
                 const daysInGarage = Math.floor(
@@ -238,6 +250,24 @@ const Dashboard = () => {
                 );
               })}
             </ul>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </Paper>
 
           {/* Top quoted services */}

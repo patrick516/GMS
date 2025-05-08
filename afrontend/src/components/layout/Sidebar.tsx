@@ -16,12 +16,13 @@ import { FaPlus } from "react-icons/fa";
 import { FaSupple } from "react-icons/fa";
 import { FaFileSignature, FaFileInvoiceDollar } from "react-icons/fa";
 
-const userRaw = localStorage.getItem("user");
-const user = userRaw ? JSON.parse(userRaw) : null;
+import logout from "@components/constants/pages/logout";
 
-console.log("user from localStorage:", user);
+import { useAuth } from "@hooks/useAuth";
 
 const Sidebar = () => {
+  const { user } = useAuth();
+
   const [isInventoryOpen, setInventoryOpen] = useState(false);
 
   const [isUsersOpen, setUsersOpen] = useState(false);
@@ -420,7 +421,7 @@ const Sidebar = () => {
       </nav>
       <div className="p-4 mt-auto">
         <button
-          onClick={() => console.log("Logging out...")}
+          onClick={logout}
           className="flex items-center w-full p-2 text-sm text-red-400 transition rounded hover:bg-red-700 hover:text-white"
         >
           <FaPowerOff className="mr-2 text-lg" />

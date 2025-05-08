@@ -19,20 +19,21 @@ exports.addVehicle = async (req, res) => {
 
     console.log("Incoming vehicle data:", req.body);
 
-    if (!customerId) {
-      return res.status(400).json({ message: "Customer is required" });
+    if (!customerId && !customerName) {
+      return res
+        .status(400)
+        .json({ message: "Either customerId or customerName is required" });
     }
-
     const newVehicle = await Vehicle.create({
-      customerId,
-      plateNumber: plateNumber.trim(),
+      customerId: customerId || undefined, // avoids saving empty string/null
+      customerName,
+      plateNumber: plateNumber?.trim(),
       model,
       brand,
       engineNumber: engineNumber?.trim(),
       color,
       notes,
       createdAt,
-      customerName,
       technicianId: technicianId || null,
       supervisorId: supervisorId || null,
     });

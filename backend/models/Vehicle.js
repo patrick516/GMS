@@ -5,8 +5,10 @@ const vehicleSchema = new mongoose.Schema(
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
-      required: true,
+      required: false,
+      default: null,
     },
+
     technicianId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
