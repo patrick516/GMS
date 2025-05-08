@@ -1,9 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@hooks/useAuth"; // ✅ import context hook
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { setUser } = useAuth(); // ✅ use context
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,6 +23,7 @@ const LoginForm = () => {
         }
       );
 
+      setUser(res.data.user); // ✅ update context instantly
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 

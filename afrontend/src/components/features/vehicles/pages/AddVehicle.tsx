@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
@@ -8,7 +8,8 @@ import { Autocomplete } from "@mui/material";
 import axios from "axios";
 
 const schema = z.object({
-  customerId: z.string().min(1, "Customer is required"),
+  customerId: z.string().optional(),
+  customerName: z.string().min(1, "Customer name is required"),
   plateNumber: z.string().min(3, "Plate number is required"),
   model: z.string().min(2, "Model is required"),
   brand: z.string().min(1, "Brand is required"),
@@ -20,11 +21,12 @@ const schema = z.object({
   notes: z.string().optional(),
 });
 
+type VehicleFormData = z.infer<typeof schema>;
+
 const AddVehicle = () => {
   const [customers, setCustomers] = useState<{ id: string; name: string }[]>(
     []
   );
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>(
     []
   );
@@ -34,11 +36,13 @@ const AddVehicle = () => {
     handleSubmit,
     reset,
     setValue,
+    control,
     formState: { errors },
-  } = useForm({
+  } = useForm<VehicleFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       customerId: "",
+      customerName: "",
       plateNumber: "",
       model: "",
       brand: "",
@@ -54,7 +58,6 @@ const AddVehicle = () => {
   useEffect(() => {
     const fetchCustomersAndEmployees = async () => {
       try {
-        // Fetch customers
         const customerRes = await axios.get(
           `${import.meta.env.VITE_API_URL}/customers`
         );
@@ -64,7 +67,6 @@ const AddVehicle = () => {
         }));
         setCustomers(customerList);
 
-        // Fetch employees (technicians & supervisors)
         const employeeRes = await axios.get(
           `${import.meta.env.VITE_API_URL}/employees`
         );
@@ -74,76 +76,87 @@ const AddVehicle = () => {
         }));
         setEmployees(employeeList);
       } catch (err) {
-        console.error(" Failed to load customers or employees:", err);
+        console.error("Failed to load customers or employees:", err);
       }
     };
 
     fetchCustomersAndEmployees();
   }, []);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: VehicleFormData) => {
     const finalData = {
       ...data,
-      customerName: selectedCustomer,
-      // 🚨 If customerId was not set via Autocomplete selection, skip submission
       customerId: data.customerId?.trim() || null,
     };
 
-    if (!finalData.customerId) {
-      toast.error("Please select an existing customer.");
-      return;
-    }
-
     try {
+      console.log("Final payload:", finalData);
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/vehicles/add`,
         finalData
       );
       toast.success("Vehicle added successfully");
-      console.log(" Vehicle saved:", res.data);
       reset();
-      setSelectedCustomer("");
     } catch (err) {
-      console.error(" Error adding vehicle:", err);
+      console.error("Error adding vehicle:", err);
       toast.error("Failed to add vehicle");
     }
   };
 
   return (
-    <Box className="max-w-4xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
+    <Box className="max-w-4xl p-8 mx-auto mt-10 text-black bg-white shadow-xl rounded-xl">
       <Typography
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Add Vehicle
       </Typography>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2"
       >
-        <Autocomplete
-          options={customers}
-          getOptionLabel={(option) => option.name}
-          onChange={(_, selected) => {
-            if (selected) {
-              setSelectedCustomer(selected.name);
-              setValue("customerId", selected.id);
-            } else {
-              setSelectedCustomer("");
-              setValue("customerId", "");
-            }
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Select Customer"
-              fullWidth
-              error={!!errors.customerId}
-              helperText={errors.customerId?.message}
+        {/* Customer field (select or type) */}
+        <Controller
+          name="customerName"
+          control={control}
+          render={({ field }) => (
+            <Autocomplete
+              freeSolo
+              options={customers}
+              getOptionLabel={(option) =>
+                typeof option === "string" ? option : option.name
+              }
+              onChange={(_, selected) => {
+                if (typeof selected === "string") {
+                  setValue("customerName", selected);
+                  setValue("customerId", "");
+                } else if (selected) {
+                  setValue("customerName", selected.name);
+                  setValue("customerId", selected.id);
+                } else {
+                  setValue("customerName", "");
+                  setValue("customerId", "");
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  {...field}
+                  id="customerName"
+                  name="customerName"
+                  label="Customer (select or type)"
+                  autoComplete="off"
+                  error={!!errors.customerName}
+                  helperText={errors.customerName?.message}
+                  fullWidth
+                />
+              )}
             />
           )}
         />
+
+        {/* Technician */}
         <Autocomplete
           options={employees}
           getOptionLabel={(option) => option.name}
@@ -151,10 +164,19 @@ const AddVehicle = () => {
             setValue("technicianId", selected?.id || "");
           }}
           renderInput={(params) => (
-            <TextField {...params} label="Assign Technician" fullWidth />
+            <TextField
+              {...params}
+              label="Assign Technician"
+              id="technicianId"
+              name="technicianId"
+              error={!!errors.technicianId}
+              helperText={errors.technicianId?.message}
+              fullWidth
+            />
           )}
         />
 
+        {/* Supervisor */}
         <Autocomplete
           options={employees}
           getOptionLabel={(option) => option.name}
@@ -162,13 +184,22 @@ const AddVehicle = () => {
             setValue("supervisorId", selected?.id || "");
           }}
           renderInput={(params) => (
-            <TextField {...params} label="Assign Supervisor" fullWidth />
+            <TextField
+              {...params}
+              label="Assign Supervisor"
+              id="supervisorId"
+              name="supervisorId"
+              fullWidth
+            />
           )}
         />
 
         <TextField
           label="Plate Number"
+          id="plateNumber"
           {...register("plateNumber")}
+          name="plateNumber"
+          autoComplete="off"
           error={!!errors.plateNumber}
           helperText={errors.plateNumber?.message}
           fullWidth
@@ -176,7 +207,10 @@ const AddVehicle = () => {
 
         <TextField
           label="Model"
+          id="model"
           {...register("model")}
+          name="model"
+          autoComplete="off"
           error={!!errors.model}
           helperText={errors.model?.message}
           fullWidth
@@ -184,7 +218,10 @@ const AddVehicle = () => {
 
         <TextField
           label="Brand"
+          id="brand"
           {...register("brand")}
+          name="brand"
+          autoComplete="off"
           error={!!errors.brand}
           helperText={errors.brand?.message}
           fullWidth
@@ -192,7 +229,10 @@ const AddVehicle = () => {
 
         <TextField
           label="Engine Number"
+          id="engineNumber"
           {...register("engineNumber")}
+          name="engineNumber"
+          autoComplete="off"
           error={!!errors.engineNumber}
           helperText={errors.engineNumber?.message}
           fullWidth
@@ -200,7 +240,10 @@ const AddVehicle = () => {
 
         <TextField
           label="Color"
+          id="color"
           {...register("color")}
+          name="color"
+          autoComplete="off"
           error={!!errors.color}
           helperText={errors.color?.message}
           fullWidth
@@ -209,7 +252,9 @@ const AddVehicle = () => {
         <TextField
           label="Created At"
           type="date"
+          id="createdAt"
           {...register("createdAt")}
+          name="createdAt"
           InputLabelProps={{ shrink: true }}
           error={!!errors.createdAt}
           helperText={errors.createdAt?.message}
@@ -218,9 +263,12 @@ const AddVehicle = () => {
 
         <TextField
           label="Notes"
+          id="notes"
+          {...register("notes")}
+          name="notes"
+          autoComplete="off"
           multiline
           rows={3}
-          {...register("notes")}
           error={!!errors.notes}
           helperText={errors.notes?.message}
           fullWidth

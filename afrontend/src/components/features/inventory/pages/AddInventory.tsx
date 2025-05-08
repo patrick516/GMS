@@ -151,7 +151,9 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
 
       setImageFile(null);
       setImagePreview("");
-      onClose?.();
+      setTimeout(() => {
+        onClose?.();
+      }, 1500);
     } catch (error) {
       console.error("Error submitting inventory form:", error);
       toast.error("Failed to save inventory");
@@ -159,13 +161,13 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
   };
 
   return (
-    <div className="max-w-6xl mt-20 mx-auto bg-white text-black p-10 rounded-xl shadow-xl">
-      <h2 className="text-4xl font-bold mb-10 text-center">
+    <div className="max-w-6xl p-10 mx-auto mt-20 text-black bg-white shadow-xl rounded-xl">
+      <h2 className="mb-10 text-4xl font-bold text-center">
         {itemToEdit ? "Edit Inventory" : "Add Inventory"}
       </h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 "
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 "
       >
         <TextField
           id="name"
@@ -325,7 +327,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
           ))}
         </TextField>
         {/* <div className="col-span-1 md:col-span-2">
-          <label className="block font-semibold mb-2">Upload Image</label>
+          <label className="block mb-2 font-semibold">Upload Image</label>
           <input
             type="file"
             accept="image/*"
@@ -341,12 +343,12 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
             <img
               src={imagePreview}
               alt="Preview"
-              className="mt-2 w-32 h-32 object-contain border rounded"
+              className="object-contain w-32 h-32 mt-2 border rounded"
             />
           )}
         </div> */}
 
-        <div className="col-span-1 md:col-span-2 flex gap-4 mt-4">
+        <div className="flex col-span-1 gap-4 mt-4 md:col-span-2">
           <Button
             type="submit"
             variant="contained"

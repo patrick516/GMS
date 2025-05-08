@@ -1,39 +1,38 @@
-import axios from "axios";
+import API from "@utils/axios";
 
 const BASE = import.meta.env.VITE_API_URL;
 
 export const fetchInventoryReport = () =>
-  axios.get(`${BASE}/inventory/report-detailed`);
+  API.get(`${BASE}/inventory/report-detailed`);
 
-export const fetchInvoicesSummary = () => axios.get(`${BASE}/invoices/summary`);
+export const fetchInvoicesSummary = () => API.get(`${BASE}/invoices/summary`);
 
-export const fetchAllInvoices = () => axios.get(`${BASE}/invoices/all`);
+export const fetchAllInvoices = () => API.get(`${BASE}/invoices/all`);
 
 export const fetchQuotationsSummary = () =>
-  axios.get(`${BASE}/quotations/summary`);
+  API.get(`${BASE}/quotations/summary`);
 
 export const fetchAllQuotations = () =>
-  axios.get(`${import.meta.env.VITE_API_URL}/quotations/all`);
+  API.get(`${import.meta.env.VITE_API_URL}/quotations/all`);
 
-export const fetchPayrollMonthly = () => axios.get(`${BASE}/payslips/monthly`);
+export const fetchPayrollMonthly = () => API.get(`${BASE}/payslips/monthly`);
 
-export const fetchCustomersSummary = () =>
-  axios.get(`${BASE}/customers/summary`);
+export const fetchCustomersSummary = () => API.get(`${BASE}/customers/summary`);
 
 export const fetchFrequentCustomers = () => {
-  return axios.get(`${import.meta.env.VITE_API_URL}/customers/frequent`);
+  return API.get(`${import.meta.env.VITE_API_URL}/customers/frequent`);
 };
 export const fetchAllCustomers = () =>
-  axios.get(`${import.meta.env.VITE_API_URL}/customers`);
+  API.get(`${import.meta.env.VITE_API_URL}/customers`);
 
-export const fetchOverallReport = () => axios.get(`${BASE}/reports/summary`);
+export const fetchOverallReport = () => API.get(`${BASE}/reports/summary`);
 
-export const fetchPayrollTrend = () => axios.get(`${BASE}/payslips/trend`);
+export const fetchPayrollTrend = () => API.get(`${BASE}/payslips/trend`);
 
-export const fetchAllPayslips = () => axios.get(`${BASE}/payslips/all`);
+export const fetchAllPayslips = () => API.get(`${BASE}/payslips/all`);
 export const fetchDebtors = () => {
-  return axios.get(`${import.meta.env.VITE_API_URL}/customers/debtors`);
+  return API.get(`${import.meta.env.VITE_API_URL}/customers/debtors`);
 };
 
 export const fetchVehicleList = () =>
-  axios.get(`${import.meta.env.VITE_API_URL}/vehicles/list`);
+  API.get(`${import.meta.env.VITE_API_URL}/vehicles/list`);
