@@ -16,6 +16,11 @@ import { FaPlus } from "react-icons/fa";
 import { FaSupple } from "react-icons/fa";
 import { FaFileSignature, FaFileInvoiceDollar } from "react-icons/fa";
 
+const userRaw = localStorage.getItem("user");
+const user = userRaw ? JSON.parse(userRaw) : null;
+
+console.log("user from localStorage:", user);
+
 const Sidebar = () => {
   const [isInventoryOpen, setInventoryOpen] = useState(false);
 
@@ -28,28 +33,34 @@ const Sidebar = () => {
   return (
     <aside className="top-0 left-0 z-50 w-80 h-screen bg-[#24397b] text-white flex flex-col shadow-md overflow-y-auto">
       {/* Logo Icon */}
-      <div className="flex justify-center items-center py-4">
-        <div className="flex justify-center items-center gap-4 py-4">
+      <div className="flex items-center justify-center py-4">
+        <div className="flex items-center justify-center gap-4 py-4">
           <img
             src="/logos/uas-motors-logo.png"
             alt="UAS Motors Logo"
-            className="h-20 w-auto"
+            className="w-auto h-20"
           />
           {/* <img
             src="/logos/garage-logo.png"
             alt="Second Logo"
-            className="h-20 w-auto"
+            className="w-auto h-20"
           /> */}
         </div>
       </div>
 
       {/* Title */}
-      <div className="text-center text-xl font-semibold pb-3 border-b border-gray-700 px-4">
-        Garage Management System
+      <div className="px-4 pb-3 text-center border-b border-gray-700">
+        <div className="text-xl font-semibold">Garage Management System</div>
+        {user && (
+          <>
+            <div className="mt-1 text-sm text-gray-300">{user.username}</div>
+            <div className="text-xs text-gray-400">{user.email}</div>
+          </>
+        )}
       </div>
 
       {/* Nav links */}
-      <nav className="flex flex-col space-y-2 p-4">
+      <nav className="flex flex-col p-4 space-y-2">
         {/* Dashboard */}
         <NavLink
           to="/dashboard"
@@ -65,7 +76,7 @@ const Sidebar = () => {
         {/* Inventory (collapsible) */}
         <div
           onClick={() => setInventoryOpen(!isInventoryOpen)}
-          className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
+          className="flex items-center p-2 transition rounded cursor-pointer hover:bg-gray-700"
         >
           <FaBox className="mr-3" />
           <span className="flex-1">Inventory</span>
@@ -78,7 +89,7 @@ const Sidebar = () => {
 
         {/* Inventory sub-items (visible only if isInventoryOpen is true) */}
         {isInventoryOpen && (
-          <div className="ml-8 flex flex-col space-y-1">
+          <div className="flex flex-col ml-8 space-y-1">
             <NavLink
               to="/inventory/add"
               className={({ isActive }) =>
@@ -164,7 +175,7 @@ const Sidebar = () => {
         {/* Users (collapsible) */}
         <div
           onClick={() => setUsersOpen(!isUsersOpen)}
-          className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
+          className="flex items-center p-2 transition rounded cursor-pointer hover:bg-gray-700"
         >
           <FaUsers className="mr-3" />
           <span className="flex-1">Users</span>
@@ -175,7 +186,7 @@ const Sidebar = () => {
           />
         </div>
         {isUsersOpen && (
-          <div className="ml-8 flex flex-col space-y-1">
+          <div className="flex flex-col ml-8 space-y-1">
             <NavLink
               to="/users/customers/add"
               className={({ isActive }) =>
@@ -226,7 +237,7 @@ const Sidebar = () => {
 
         <div
           onClick={() => setVehiclesOpen(!isVehiclesOpen)}
-          className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
+          className="flex items-center p-2 transition rounded cursor-pointer hover:bg-gray-700"
         >
           <FaCarSide className="mr-3" />
           <span className="flex-1">Vehicles</span>
@@ -239,7 +250,7 @@ const Sidebar = () => {
 
         {/* Vehicle sub-links */}
         {isVehiclesOpen && (
-          <div className="ml-8 flex flex-col space-y-1">
+          <div className="flex flex-col ml-8 space-y-1">
             <NavLink
               to="/vehicles/add"
               className={({ isActive }) =>
@@ -281,7 +292,7 @@ const Sidebar = () => {
         {/* Quotations */}
         <div
           onClick={() => setQuotationsOpen(!isQuotationsOpen)}
-          className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
+          className="flex items-center p-2 transition rounded cursor-pointer hover:bg-gray-700"
         >
           <FaFileSignature className="mr-3" />
           <span className="flex-1">Quotations</span>
@@ -293,7 +304,7 @@ const Sidebar = () => {
         </div>
 
         {isQuotationsOpen && (
-          <div className="ml-8 flex flex-col space-y-1">
+          <div className="flex flex-col ml-8 space-y-1">
             <NavLink
               to="/quotations/create"
               className={({ isActive }) =>
@@ -320,7 +331,7 @@ const Sidebar = () => {
         {/* Invoices */}
         <div
           onClick={() => setInvoicesOpen(!isInvoicesOpen)}
-          className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
+          className="flex items-center p-2 transition rounded cursor-pointer hover:bg-gray-700"
         >
           <FaFileInvoiceDollar className="mr-3" />
           <span className="flex-1">Invoices</span>
@@ -332,7 +343,7 @@ const Sidebar = () => {
         </div>
 
         {isInvoicesOpen && (
-          <div className="ml-8 flex flex-col space-y-1">
+          <div className="flex flex-col ml-8 space-y-1">
             {/* <NavLink
               to="/invoices/create"
               className={({ isActive }) =>
@@ -371,7 +382,7 @@ const Sidebar = () => {
         {/* 
         <div
           onClick={() => setVehiclesOpen(!isVehiclesOpen)}
-          className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-700 transition"
+          className="flex items-center p-2 transition rounded cursor-pointer hover:bg-gray-700"
         >
           <FaCarSide className="mr-3" />
           <span className="flex-1">Vehicles</span>
@@ -410,7 +421,7 @@ const Sidebar = () => {
       <div className="p-4 mt-auto">
         <button
           onClick={() => console.log("Logging out...")}
-          className="flex items-center w-full p-2 rounded hover:bg-red-700 text-sm transition text-red-400 hover:text-white"
+          className="flex items-center w-full p-2 text-sm text-red-400 transition rounded hover:bg-red-700 hover:text-white"
         >
           <FaPowerOff className="mr-2 text-lg" />
           Logout

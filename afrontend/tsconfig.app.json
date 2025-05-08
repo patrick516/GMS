@@ -30,6 +30,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": ["react"],
 
     /* Type safety */
     "strict": true,

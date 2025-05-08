@@ -22,24 +22,55 @@ import {
   fetchAllQuotations,
 } from "@services/ReportsService";
 
-const Dashboard = () => {
-  const [inventoryStats, setInventoryStats] = useState<any[]>([]);
-  const [financeStats, setFinanceStats] = useState<any[]>([]);
-  const [vehicleQueue, setVehicleQueue] = useState<any[]>([]);
-  const [topServices, setTopServices] = useState<any[]>([]);
+// --- Type definitions ---
+interface InventoryItem {
+  name: string;
+  quantity: number;
+  totalPurchased: number;
+  totalSold: number;
+  cost?: number;
+  revenue?: number;
+}
 
-  const COLORS = ["#00C49F", "#FFBB28", "#FF8042", "#0088FE", "#aa66cc"];
+interface FinanceStat {
+  name: string;
+  value: number;
+}
+
+interface VehicleItem {
+  _id: string;
+  plateNumber: string;
+  model: string;
+  createdAt: string;
+  isDone: boolean;
+}
+
+interface ServiceStat {
+  name: string;
+  count: number;
+}
+
+const Dashboard = () => {
+  const [inventoryStats, setInventoryStats] = useState<InventoryItem[]>([]);
+  const [financeStats, setFinanceStats] = useState<FinanceStat[]>([]);
+  const [vehicleQueue, setVehicleQueue] = useState<VehicleItem[]>([]);
+  const [topServices, setTopServices] = useState<ServiceStat[]>([]);
+
+  const COLORS = ["#6EC1E4", "#F67280", "#355C7D", "#C06C84", "#6EC1E4"];
 
   // Inventory bar chart data
   useEffect(() => {
     fetchInventoryReport().then((res) => {
-      const items = res.data.data;
-      const chartData = items.map((item: any) => ({
+      const items: InventoryItem[] = res.data.data;
+      const chartData: InventoryItem[] = items.map((item) => ({
         name: item.name,
         quantity: item.quantity,
-        purchased: item.totalPurchased,
-        sold: item.totalSold,
+        totalPurchased: item.totalPurchased,
+        totalSold: item.totalSold,
+        cost: item.cost,
+        revenue: item.revenue,
       }));
+
       setInventoryStats(chartData);
     });
   }, []);
@@ -48,14 +79,11 @@ const Dashboard = () => {
     const fetchFinanceData = async () => {
       try {
         const inventoryRes = await fetchInventoryReport();
-        const items = inventoryRes.data.data;
+        const items: InventoryItem[] = inventoryRes.data.data;
 
-        const cost = items.reduce(
-          (sum: number, item: any) => sum + (item.cost || 0),
-          0
-        );
+        const cost = items.reduce((sum, item) => sum + (item.cost || 0), 0);
         const revenue = items.reduce(
-          (sum: number, item: any) => sum + (item.revenue || 0),
+          (sum, item) => sum + (item.revenue || 0),
           0
         );
         const profit = revenue - cost;
@@ -75,8 +103,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchVehicleList().then((res) => {
-      const all = res.data.data;
-      const pending = all.filter((v: any) => !v.isDone);
+      const all: VehicleItem[] = res.data.data;
+      const pending = all.filter((v) => !v.isDone);
       setVehicleQueue(pending);
     });
   }, []);
@@ -98,14 +126,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchAllQuotations().then((res) => {
-      const quotes = res.data.data;
+      const quotes = res.data.data as { problemDescription?: string }[];
       const countByService: Record<string, number> = {};
-      quotes.forEach((q: any) => {
+      quotes.forEach((q) => {
         const name = q.problemDescription || "Other";
         countByService[name] = (countByService[name] || 0) + 1;
       });
 
-      const chartData = Object.entries(countByService)
+      const chartData: ServiceStat[] = Object.entries(countByService)
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
@@ -118,14 +146,14 @@ const Dashboard = () => {
     <>
       <Typography
         variant="h4"
-        className=" font-bold mb-6 text-center text-black"
+        className="mb-6 font-bold text-center text-black "
       >
         Admin Dashboard
       </Typography>
-      <Box className="p-6 max-w-8xl mx-auto">
+      <Box className="p-6 mx-auto max-w-8xl">
         <ToastContainer position="top-right" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Inventory Bar Chart */}
           <Paper className="p-4">
             <Typography variant="h6" className="mb-4 font-semibold">
@@ -137,7 +165,7 @@ const Dashboard = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="quantity" fill="#8884d8" />
+                <Bar dataKey="quantity" fill="#2a5c97" />
               </BarChart>
             </ResponsiveContainer>
           </Paper>
@@ -191,18 +219,18 @@ const Dashboard = () => {
                 return (
                   <li
                     key={index}
-                    className="border p-2 rounded shadow-sm flex justify-between"
+                    className="flex justify-between p-2 border rounded shadow-sm"
                   >
                     <div>
                       {v.plateNumber} - {v.model}
-                      <span className="text-sm text-gray-500 ml-2">
+                      <span className="ml-2 text-sm text-gray-500">
                         ({createdAt.toLocaleString()}) —{" "}
                         <strong>{daysInGarage} day(s)</strong> in garage
                       </span>
                     </div>
                     <button
                       onClick={() => handleMarkDone(v._id, v.model)}
-                      className="text-blue-500 hover:underline text-sm"
+                      className="text-sm text-blue-500 hover:underline"
                     >
                       Mark Done
                     </button>
