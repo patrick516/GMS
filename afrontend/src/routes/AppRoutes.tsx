@@ -1,5 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "@components/ProtectedRoute";
 import MainLayout from "@layouts/MainLayout";
+// Auth pages
+import AuthPage from "@components/constants/pages/AuthPage";
+import ForgotPasswordPage from "@components/constants/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@components/constants/pages/ResetPasswordPage";
 
 // Main pages
 import Dashboard from "@pages/Dashboard";
@@ -41,224 +46,289 @@ import DebtorsList from "@components/features/customers/pages/DebtorsList";
 const AppRoutes = () => {
   return (
     <Routes>
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+
       <Route path="/" element={<Navigate to="/dashboard" />} />
 
       <Route
         path="/dashboard"
         element={
-          <MainLayout>
-            <Dashboard />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/inventory"
         element={
-          <MainLayout>
-            <Inventory />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Inventory />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventory/add"
         element={
-          <MainLayout>
-            <AddInventory />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <AddInventory />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventory/edit"
         element={
-          <MainLayout>
-            <EditInventory />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <EditInventory />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventory/list"
         element={
-          <MainLayout>
-            <InventoryList />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <InventoryList />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventory/stock"
         element={
-          <MainLayout>
-            <StockLevels />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <StockLevels />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventory/damaged"
         element={
-          <MainLayout>
-            <DamagedItems />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <DamagedItems />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventory/reorder"
         element={
-          <MainLayout>
-            <ReorderRequests />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <ReorderRequests />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/inventory/suppliers"
         element={
-          <MainLayout>
-            <Suppliers />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Suppliers />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/users"
         element={
-          <MainLayout>
-            <Users />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Users />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/users/customers/add"
         element={
-          <MainLayout>
-            <AddCustomer />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <AddCustomer />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/users/customers/debtors"
         element={
-          <MainLayout>
-            <DebtorsList />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <DebtorsList />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/users/employees"
         element={
-          <MainLayout>
-            <Employees />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Employees />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/users/accounts"
         element={
-          <MainLayout>
-            <Accounts />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <Accounts />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/vehicles"
         element={
-          <MainLayout>
-            <Users />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <Users />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/vehicles/add"
         element={
-          <MainLayout>
-            <AddVehicle />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <AddVehicle />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/vehicles/list"
         element={
-          <MainLayout>
-            <VehicleList />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <VehicleList />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/vehicles/types"
         element={
-          <MainLayout>
-            <VehicleTypes />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <VehicleTypes />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/quotations/create"
         element={
-          <MainLayout>
-            <CreateQuotation />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <CreateQuotation />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/quotations"
         element={
-          <MainLayout>
-            <QuotationList />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <QuotationList />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/quotations/:id"
         element={
-          <MainLayout>
-            <QuotationDetails />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <QuotationDetails />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/invoices/create"
         element={
-          <MainLayout>
-            <CreateInvoice />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <CreateInvoice />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/invoices"
         element={
-          <MainLayout>
-            <InvoiceList />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <InvoiceList />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/invoices/:id"
         element={
-          <MainLayout>
-            <InvoiceDetails />
-          </MainLayout>
+          <ProtectedRoute>
+            <MainLayout>
+              <InvoiceDetails />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/reports"
         element={
-          <MainLayout>
-            <Reports />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <Reports />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/settings"
         element={
-          <MainLayout>
-            <Settings />
-          </MainLayout>
+          <ProtectedRoute>
+            {" "}
+            <MainLayout>
+              <Settings />
+            </MainLayout>
+          </ProtectedRoute>
         }
       />
+      <Route path="*" element={<Navigate to="/auth" replace />} />
     </Routes>
   );
 };

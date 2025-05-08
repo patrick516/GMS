@@ -17,6 +17,7 @@ const vehicleRoutes = require("./routes/vehicle");
 const reportRoutes = require("./routes/report");
 const invoiceRoutes = require("./routes/invoice");
 const quotationRoutes = require("./routes/quotation");
+const authRoutes = require("./routes/authRoute");
 
 const app = express();
 app.use(cors());
@@ -37,6 +38,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/quotations", quotationRoutes);
+app.use("/api/auth", authRoutes);
 
 connectDB();
 
