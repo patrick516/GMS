@@ -38,6 +38,9 @@ exports.getInventoryReportDetailed = async (req, res) => {
               { $toDouble: "$totalCosts" },
             ],
           },
+          calculatedSales: {
+            $multiply: ["$quantity", "$salePricePerUnit"],
+          },
         },
       },
       {
@@ -51,9 +54,11 @@ exports.getInventoryReportDetailed = async (req, res) => {
           revenue: 1,
           cost: 1,
           profit: 1,
+          calculatedSales: 1,
         },
       },
     ]);
+    console.log("Outgoing inventory data:", report[0]);
 
     res.status(200).json({ success: true, data: report });
   } catch (err) {

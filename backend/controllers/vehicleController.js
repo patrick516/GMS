@@ -89,27 +89,39 @@ exports.getCustomersWithVehicles = async (req, res) => {
 exports.getVehicles = async (req, res) => {
   try {
     const vehicles = await Vehicle.find({ isDone: { $ne: true } }).sort({
-      arrivalTime: -1,
+      createdAt: -1,
     });
     res.status(200).json({ success: true, data: vehicles });
   } catch (err) {
     console.error("Error getting vehicles:", err);
-    res.status(500).json({ success: false, message: "Failed to fetch" });
+    res.status(500).json({ success: false });
   }
 };
 
 // vehicleController.js
 exports.markVehicleAsDone = async (req, res) => {
   try {
-    await Vehicle.findByIdAndUpdate(req.params.id, {
-      isDone: true,
-      completedAt: new Date(),
-    });
+    console.log("🔧 Marking vehicle done →", req.params.id);
 
+    const updated = await Vehicle.findByIdAndUpdate(
+      req.params.id,
+      {
+        isDone: true,
+        completedAt: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      console.log("❌ No vehicle found with this ID");
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+
+    console.log("✅ Vehicle marked as done:", updated);
     res.status(200).json({ success: true });
   } catch (err) {
-    console.error("Error marking vehicle as done:", err);
-    res.status(500).json({ success: false, message: "Failed to mark done" });
+    console.error("❌ Error marking done:", err);
+    res.status(500).json({ success: false });
   }
 };
 
@@ -120,6 +132,25 @@ exports.deleteVehicle = async (req, res) => {
     res.status(200).json({ success: true, message: "Vehicle deleted" });
   } catch (err) {
     console.error("Failed to delete vehicle", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getCompletedVehicles = async (req, res) => {
+  try {
+    const vehicles = await Vehicle.find({ isDone: true }).populate(
+      "customerId",
+      "fullName email phone"
+    );
+    const enriched = vehicles.map((v) => ({
+      ...v._doc,
+      customerName: v.customerId?.fullName || v.customerName,
+      customerEmail: v.customerId?.email || "",
+      customerPhone: v.customerId?.phone || "",
+    }));
+    res.status(200).json({ success: true, data: enriched });
+  } catch (err) {
+    console.error("Failed to load completed vehicles:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

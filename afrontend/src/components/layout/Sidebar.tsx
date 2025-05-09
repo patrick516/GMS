@@ -5,7 +5,7 @@ import { AiOutlinePlus } from "react-icons/ai";
 import { RiFileList2Line } from "react-icons/ri";
 import { MdInventory2 } from "react-icons/md";
 import { TbBoxOff } from "react-icons/tb";
-import { FaPowerOff } from "react-icons/fa";
+import { FaList } from "react-icons/fa";
 import { BsPersonStanding } from "react-icons/bs";
 import { FiUser } from "react-icons/fi";
 import { SiCashapp } from "react-icons/si";
@@ -15,8 +15,6 @@ import { FaCarSide } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa";
 import { FaSupple } from "react-icons/fa";
 import { FaFileSignature, FaFileInvoiceDollar } from "react-icons/fa";
-
-import logout from "@components/constants/pages/logout";
 
 import { useAuth } from "@hooks/useAuth";
 
@@ -264,7 +262,7 @@ const Sidebar = () => {
               Add Vehicle
             </NavLink>
 
-            {/* <NavLink
+            <NavLink
               to="/vehicles/list"
               className={({ isActive }) =>
                 `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
@@ -276,7 +274,7 @@ const Sidebar = () => {
               Vehicle List
             </NavLink>
 
-            <NavLink
+            {/* <NavLink
               to="/vehicles/types"
               className={({ isActive }) =>
                 `flex items-center text-sm p-2 rounded hover:bg-gray-700 transition ${
@@ -419,15 +417,6 @@ const Sidebar = () => {
           <FaCog className="mr-3" /> Settings
         </NavLink>
       </nav>
-      <div className="p-4 mt-auto">
-        <button
-          onClick={logout}
-          className="flex items-center w-full p-2 text-sm text-red-400 transition rounded hover:bg-red-700 hover:text-white"
-        >
-          <FaPowerOff className="mr-2 text-lg" />
-          Logout
-        </button>
-      </div>
     </aside>
   );
 };

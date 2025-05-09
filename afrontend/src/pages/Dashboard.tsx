@@ -114,16 +114,14 @@ const Dashboard = () => {
 
   const handleMarkDone = async (id: string, model: string) => {
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_URL}/vehicles/delete/${id}`
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL}/vehicles/mark-done/${id}`
       );
-
       setVehicleQueue((prev) => prev.filter((v) => v._id !== id));
-
-      toast.success(`${model} marked as repaired and removed from queue`);
+      toast.success(`${model} marked as repaired`);
     } catch (err) {
-      console.error("Failed to mark vehicle as done", err);
       toast.error("Failed to mark as done");
+      console.error(err);
     }
   };
 
@@ -168,15 +166,19 @@ const Dashboard = () => {
           {/* Inventory Bar Chart */}
           <Paper className="p-4">
             <Typography variant="h6" className="mb-4 font-semibold">
-              Inventory Quantities (Bar Chart)
+              Inventory Quantities (Purchased vs Sold)
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={inventoryStats}>
+              <BarChart
+                data={inventoryStats}
+                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+              >
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="quantity" fill="#2a5c97" />
+                <Bar dataKey="totalPurchased" name="Purchased" fill="#2a5c97" />
+                <Bar dataKey="totalSold" name="Sold" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </Paper>

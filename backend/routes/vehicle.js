@@ -4,8 +4,8 @@ const router = express.Router();
 const vehicleController = require("../controllers/vehicleController");
 
 router.post("/add", vehicleController.addVehicle);
-
 router.get("/list", vehicleController.getVehicles);
+router.get("/completed", vehicleController.getCompletedVehicles);
 
 router.get(
   "/customers-with-vehicles",

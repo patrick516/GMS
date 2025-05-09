@@ -352,7 +352,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
           <Button
             type="submit"
             variant="contained"
-            color="success"
+            color="primary"
             className="flex-1"
           >
             {itemToEdit ? "Update Item" : "Add Item"}

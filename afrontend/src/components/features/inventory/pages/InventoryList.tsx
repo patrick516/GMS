@@ -22,21 +22,38 @@ const InventoryList = () => {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/inventory`
-        );
-        const formatted = response.data.map((item: any, index: number) => ({
-          ...item,
-          id: item._id || index + 1, // DataGrid requires an 'id' field
-        }));
+        const [inventoryRes, salesRes] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API_URL}/inventory`),
+          axios.get(
+            `${import.meta.env.VITE_API_URL}/inventory/report-detailed`
+          ),
+        ]);
+
+        const inventoryList = inventoryRes.data;
+        const salesData = salesRes.data.data;
+
+        const formatted = inventoryList.map((item: any, index: number) => {
+          const match = salesData.find((s: any) => s._id === item._id);
+
+          // 🔍 Log what's being merged
+          console.log("✅ MATCH FOUND:", {
+            name: item.name,
+            cost: item.totalCosts,
+            sales: match?.calculatedSales,
+          });
+
+          return {
+            ...item,
+            id: item._id || index + 1,
+            calculatedSales: match?.calculatedSales || 0,
+            totalCosts: Number(item.totalCosts) || 0, // 🟢 Make sure it's a number
+          };
+        });
+
         setInventoryItems(formatted);
-        formatted.forEach((item: any) =>
-          console.log("Item:", item.name, "| createdAt:", item.createdAt)
-        );
       } catch (error) {
         console.error("Error fetching inventory list:", error);
       }
@@ -85,10 +102,47 @@ const InventoryList = () => {
     {
       field: "calculatedSales",
       headerName: "Sales (MK)",
-      width: 130,
-      valueGetter: (params: any) => {
-        const row = params?.row || {};
-        return (row.purchasedQuantity || 0) * (row.salePricePerUnit || 0);
+      width: 150,
+    },
+    {
+      field: "profit",
+      headerName: "Profit (MK)",
+      width: 160,
+      renderCell: (params) => {
+        const sales = Number(params.row.calculatedSales || 0);
+        const cost = Number(params.row.totalCosts || 0);
+        const profit = sales - cost;
+
+        return (
+          <span
+            style={{ color: profit < 0 ? "red" : "green", fontWeight: 600 }}
+          >
+            {profit.toLocaleString("en-MW")}
+          </span>
+        );
+      },
+    },
+
+    {
+      field: "profitMargin",
+      headerName: "Profit Margin (%)",
+      width: 180,
+      renderCell: (params) => {
+        const sales = Number(params.row.calculatedSales || 0);
+        const cost = Number(params.row.totalCosts || 0);
+
+        if (cost === 0) return "—";
+
+        const profit = sales - cost;
+        const margin = (profit / cost) * 100;
+
+        return (
+          <span
+            style={{ color: margin < 0 ? "red" : "green", fontWeight: 600 }}
+          >
+            {margin.toFixed(1)}%
+          </span>
+        );
       },
     },
     {
@@ -113,12 +167,12 @@ const InventoryList = () => {
       renderCell: (params) => (
         <div className="flex gap-2">
           <FaPenToSquare
-            className="text-blue-600 hover:text-blue-800 cursor-pointer"
+            className="text-blue-600 cursor-pointer hover:text-blue-800"
             title="Edit"
             onClick={() => handleEdit(params.row)}
           />
           <FaTrash
-            className="text-red-600 hover:text-red-800 cursor-pointer"
+            className="text-red-600 cursor-pointer hover:text-red-800"
             title="Delete"
             onClick={() => handleDelete(params.row.id)}
           />
@@ -128,8 +182,8 @@ const InventoryList = () => {
   ];
 
   return (
-    <div className="max-w-10xl mt-20 mx-auto bg-white text-black p-10 rounded-xl shadow-xl">
-      <h2 className="text-4xl font-bold mb-6 text-center">Inventory List</h2>
+    <div className="p-10 mx-auto mt-20 text-black bg-white shadow-xl max-w-10xl rounded-xl">
+      <h2 className="mb-6 text-4xl font-bold text-center">Inventory List</h2>
 
       {isEditing && selectedItem && (
         <AddInventory
