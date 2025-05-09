@@ -222,7 +222,6 @@ const AppRoutes = () => {
         path="/vehicles/list"
         element={
           <ProtectedRoute>
-            {" "}
             <MainLayout>
               <VehicleList />
             </MainLayout>

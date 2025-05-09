@@ -275,7 +275,12 @@ const AddVehicle = () => {
         />
 
         <div className="md:col-span-2">
-          <Button type="submit" variant="contained" color="primary" fullWidth>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="small"
+          >
             Save Vehicle
           </Button>
         </div>
