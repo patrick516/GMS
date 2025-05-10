@@ -6,18 +6,27 @@ const ForgotPasswordPage = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
     setError("");
+    setLoading(true); // Start loading
 
     try {
-      const res = await axios.post("/api/auth/forgot-password", { email });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
+        { email }
+      );
       setMessage(res.data.message || "Reset link sent to your email.");
+      setEmail("");
     } catch (err) {
-        console.error("Password reset error:", err);
-        setError("Failed to send reset link. Please try again.");
-      }
+      console.error("Password reset error:", err);
+      setError("Failed to send reset link. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading
+    }
   };
 
   return (
@@ -41,12 +50,15 @@ const ForgotPasswordPage = () => {
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full py-2 text-white transition bg-blue-700 rounded hover:bg-blue-800"
-          >
-            Send Reset Link
-          </button>
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2 text-white transition bg-blue-700 rounded hover:bg-blue-800 disabled:opacity-50"
+            >
+              {loading ? "Sending..." : "Send Reset Link"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

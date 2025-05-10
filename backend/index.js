@@ -18,6 +18,7 @@ const reportRoutes = require("./routes/report");
 const invoiceRoutes = require("./routes/invoice");
 const quotationRoutes = require("./routes/quotation");
 const authRoutes = require("./routes/authRoute");
+
 const notifyRoutes = require("./routes/notify");
 
 const app = express();
@@ -42,6 +43,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/quotations", quotationRoutes);
 app.use("/api/auth", authRoutes);
+
 app.use("/api/notify", notifyRoutes);
 
 connectDB();
