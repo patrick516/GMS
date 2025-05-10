@@ -63,6 +63,19 @@ const AuthPage = () => {
 
         {activeTab === "login" ? <LoginForm /> : <RegisterForm />}
       </div>
+      <div className="absolute bottom-0 w-full text-center py-2 bg-[#001f3f]">
+        <p className="text-2xl  font-semibold text-[#00cccc]">
+          Powered by{" "}
+          <a
+            href="https://tranptech.wuaze.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="italic underline hover:text-white"
+          >
+            Tranptech
+          </a>
+        </p>
+      </div>
     </div>
   );
 };
