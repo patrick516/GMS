@@ -22,10 +22,13 @@ const ResetPasswordPage = () => {
     }
 
     try {
-      const res = await axios.post(`/api/auth/reset-password/${token}`, {
-        password,
-        confirmPassword,
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/reset-password/${token}`,
+        {
+          password,
+          confirmPassword,
+        }
+      );
       setMessage(res.data.message || "Password reset successful!");
       setTimeout(() => navigate("/auth"), 2000);
     } catch (err) {
@@ -69,12 +72,14 @@ const ResetPasswordPage = () => {
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full py-2 text-white transition bg-blue-700 rounded hover:bg-blue-800"
-          >
-            Reset Password
-          </button>
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              className="px-6 py-2 text-white transition bg-blue-700 rounded hover:bg-blue-800 disabled:opacity-50"
+            >
+              Reset Password
+            </button>
+          </div>
         </form>
       </div>
     </div>

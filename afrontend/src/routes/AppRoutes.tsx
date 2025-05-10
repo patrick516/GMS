@@ -46,7 +46,7 @@ import DebtorsList from "@components/features/customers/pages/DebtorsList";
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/login" element={<AuthPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
@@ -327,7 +327,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/auth" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };

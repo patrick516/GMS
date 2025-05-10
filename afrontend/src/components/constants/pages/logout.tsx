@@ -4,7 +4,7 @@ const logout = () => {
   localStorage.removeItem("user");
 
   // Redirect to login page
-  window.location.href = "/auth";
+  window.location.href = "/login";
 };
 
 export default logout;

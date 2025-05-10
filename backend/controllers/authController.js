@@ -1,3 +1,5 @@
+const env = require("../config");
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
@@ -60,7 +62,8 @@ exports.forgotPassword = async (req, res) => {
   user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
   await user.save();
 
-  const resetLink = `http://${req.headers.host}/reset-password/${resetToken}`;
+  const resetLink = `${env.FRONTEND_URL}/reset-password/${resetToken}`;
+  console.log("Generated reset link:", resetLink);
 
   const transporter = nodemailer.createTransport({
     service: "Gmail",
@@ -90,6 +93,9 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password, confirmPassword } = req.body;
+
+  console.log("Received token:", token);
+  console.log("Request body:", req.body);
 
   if (password !== confirmPassword) {
     return res.status(400).json({ message: "Passwords do not match" });
