@@ -117,10 +117,15 @@ exports.markVehicleAsDone = async (req, res) => {
       return res.status(404).json({ success: false, message: "Not found" });
     }
 
-    console.log("✅ Vehicle marked as done:", updated);
+    console.log("Vehicle marked as done →", {
+      id: updated._id,
+      isDone: updated.isDone,
+      completedAt: updated.completedAt,
+    });
+
     res.status(200).json({ success: true });
   } catch (err) {
-    console.error("❌ Error marking done:", err);
+    console.error("Error marking done:", err);
     res.status(500).json({ success: false });
   }
 };
