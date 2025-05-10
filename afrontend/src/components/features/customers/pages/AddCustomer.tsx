@@ -165,6 +165,7 @@ const CustomerForm = () => {
         `${import.meta.env.VITE_API_URL}/customers`,
         newCustomer
       );
+      console.log("Customer saved:", response.data.data);
       toast.success("Customer added successfully");
       resetForm();
     } catch (error) {
@@ -191,11 +192,11 @@ const CustomerForm = () => {
   };
 
   return (
-    <Box className="max-w-6xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl">
+    <Box className="max-w-6xl p-8 mx-auto mt-10 bg-white shadow-xl rounded-xl">
       <Typography
         id="form-title"
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Add Customer
       </Typography>
@@ -203,7 +204,7 @@ const CustomerForm = () => {
         role="form"
         aria-labelledby="form-title"
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2"
       >
         <TextField
           id="name"
@@ -367,12 +368,12 @@ const CustomerForm = () => {
           fullWidth
         />
 
-        <div className="md:col-span-2">
+        <div className="flex justify-center md:col-span-2">
           <Button
             type="submit"
             variant="contained"
             color="primary"
-            fullWidth
+            className="px-8"
             disabled={loading}
             aria-disabled={loading}
           >
