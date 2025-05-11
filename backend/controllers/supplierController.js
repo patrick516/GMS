@@ -1,4 +1,5 @@
 const Supplier = require("../models/Supplier");
+const logAudit = require("../utils/logAudit");
 
 exports.addSupplier = async (req, res) => {
   try {
@@ -11,6 +12,12 @@ exports.addSupplier = async (req, res) => {
       address,
       company,
       productId, // Optional, if you want to link to inventory
+    });
+    await logAudit(req.user, "Added Supplier", {
+      name: supplier.name,
+      email: supplier.email,
+      phone: supplier.phone,
+      company: supplier.company,
     });
 
     res.status(201).json({ success: true, data: supplier });

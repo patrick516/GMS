@@ -404,6 +404,18 @@ const Sidebar = () => {
         >
           <FaTools className="mr-3" /> Reports
         </NavLink>
+        {user?.role === "admin" && (
+          <NavLink
+            to="/admin/audit-trail"
+            className={({ isActive }) =>
+              `flex items-center p-2 rounded hover:bg-gray-700 transition ${
+                isActive ? "bg-gray-700" : ""
+              }`
+            }
+          >
+            <FaChartBar className="mr-3" /> History
+          </NavLink>
+        )}
 
         {/* Settings */}
         <NavLink

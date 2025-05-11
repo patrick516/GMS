@@ -7,4 +7,6 @@ router.post("/login", authController.login);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/reset-password/:token", authController.resetPassword);
 
+router.get("/admin-exists", authController.adminExists);
+
 module.exports = router;

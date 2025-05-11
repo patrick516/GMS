@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Inventory = require("../models/Inventory");
+const logAudit = require("../utils/logAudit");
 
 exports.addInventory = async (req, res) => {
   try {
@@ -13,6 +14,12 @@ exports.addInventory = async (req, res) => {
 
     const newItem = new Inventory(body);
     await newItem.save();
+
+    await logAudit(req.user, "Added Inventory", {
+      name: newItem.name,
+      brand: newItem.brand,
+      quantity: newItem.quantity,
+    });
 
     res.status(201).json({ message: "Inventory added", item: newItem });
   } catch (error) {

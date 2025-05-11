@@ -8,10 +8,13 @@ const {
   getMonthlyPayrollTrend,
 } = require("../controllers/payslipController");
 
-router.post("/add", addPayslip);
-router.get("/processed", getProcessedEmployeeIds);
-router.get("/all", getAllPayslips);
-router.get("/monthly", getMonthlyPayrollSummary);
-router.get("/trend", getMonthlyPayrollTrend);
+const verifyToken = require("../middleware/verifyToken");
+const isAdmin = require("../middleware/isAdmin");
+
+router.post("/add", verifyToken, isAdmin, addPayslip);
+router.get("/processed", verifyToken, getProcessedEmployeeIds); // optional
+router.get("/all", verifyToken, getAllPayslips); // optional
+router.get("/monthly", verifyToken, getMonthlyPayrollSummary); // optional
+router.get("/trend", verifyToken, getMonthlyPayrollTrend); // optional
 
 module.exports = router;

@@ -3,9 +3,32 @@ import { useNavigate } from "react-router-dom";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 
+import axios from "axios";
+
 const AuthPage = () => {
   const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [adminExists, setAdminExists] = useState(false);
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/auth/admin-exists`
+        );
+        setAdminExists(res.data.exists);
+      } catch (err) {
+        console.error("Failed to check admin status:", err);
+      }
+    };
+
+    checkAdmin();
+  }, []);
+  useEffect(() => {
+    if (adminExists) {
+      setActiveTab("login");
+    }
+  }, [adminExists]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,7 +64,7 @@ const AuthPage = () => {
         <div className="flex mb-4 overflow-hidden border rounded">
           <button
             onClick={() => setActiveTab("login")}
-            className={`w-1/2 py-2 font-semibold ${
+            className={`w-full py-2 font-semibold ${
               activeTab === "login"
                 ? "bg-blue-700 text-white"
                 : "bg-gray-100 text-gray-600"
@@ -49,19 +72,30 @@ const AuthPage = () => {
           >
             Login
           </button>
-          <button
-            onClick={() => setActiveTab("register")}
-            className={`w-1/2 py-2 font-semibold ${
-              activeTab === "register"
-                ? "bg-blue-700 text-white"
-                : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            Register
-          </button>
+
+          {!adminExists && (
+            <button
+              onClick={() => setActiveTab("register")}
+              className={`w-full py-2 font-semibold ${
+                activeTab === "register"
+                  ? "bg-blue-700 text-white"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              Register
+            </button>
+          )}
         </div>
 
-        {activeTab === "login" ? <LoginForm /> : <RegisterForm />}
+        {activeTab === "login" ? (
+          <LoginForm />
+        ) : adminExists ? (
+          <div className="py-4 font-semibold text-center text-red-600">
+            Admin already exists. Registration is disabled.
+          </div>
+        ) : (
+          <RegisterForm />
+        )}
       </div>
       <div className="absolute bottom-0 w-full text-center py-2 bg-[#001f3f]">
         <p className="text-2xl  font-semibold text-[#00cccc]">

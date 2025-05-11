@@ -345,14 +345,14 @@ const CreateQuotation = () => {
     <Box className="h-[90vh] max-w-7xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black flex flex-col">
       <Typography
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Create Quotation
       </Typography>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2"
       >
         <Autocomplete
           options={customers}
@@ -360,22 +360,38 @@ const CreateQuotation = () => {
           onChange={(_, selected) => {
             if (selected) {
               setSelectedCustomer(selected);
+
+              // Set customer details
               setValue("customerName", selected.name);
               setValue("phone", selected.phone || "");
               setValue("email", selected.email || "");
 
-              const matches = vehicles.filter((v) => v.ownerId === selected.id);
+              // Debug ID match
+              const matches = vehicles.filter((v) => {
+                const match = String(v.ownerId) === String(selected.id);
+                console.log("Checking vehicle:", v.plate, "Match:", match);
+                return match;
+              });
+
               if (matches.length === 1) {
                 const vehicle = matches[0];
+                setSelectedVehicle(vehicle);
                 setValue("vehicleId", vehicle.id);
+                setValue("model", vehicle.model || "");
                 toast.info(`Auto-selected vehicle: ${vehicle.plate}`);
+              } else if (matches.length > 1) {
+                toast.info("Multiple vehicles found. Please select one.");
+              } else {
+                toast.warning("No vehicle linked to selected customer.");
               }
             } else {
+              // Clear fields if customer is cleared
               setSelectedCustomer(null);
               setValue("customerName", "");
               setValue("phone", "");
               setValue("email", "");
               setValue("vehicleId", "");
+              setValue("model", "");
             }
           }}
           renderInput={(params) => (
@@ -449,7 +465,7 @@ const CreateQuotation = () => {
           fullWidth
         />
 
-        <div className="md:col-span-2 flex justify-start">
+        <div className="flex justify-start md:col-span-2">
           <Button
             type="submit"
             variant="contained"

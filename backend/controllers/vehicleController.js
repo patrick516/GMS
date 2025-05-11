@@ -1,5 +1,6 @@
 const Vehicle = require("../models/Vehicle");
 const Customer = require("../models/Customer");
+const logAudit = require("../utils/logAudit");
 
 exports.addVehicle = async (req, res) => {
   try {
@@ -36,6 +37,11 @@ exports.addVehicle = async (req, res) => {
       createdAt,
       technicianId: technicianId || null,
       supervisorId: supervisorId || null,
+    });
+    await logAudit(req.user, "Added Vehicle", {
+      plateNumber: newVehicle.plateNumber,
+      model: newVehicle.model,
+      customer: newVehicle.customerName,
     });
 
     res.status(201).json({ success: true, data: newVehicle });
@@ -113,13 +119,17 @@ exports.markVehicleAsDone = async (req, res) => {
     );
 
     if (!updated) {
-      console.log("❌ No vehicle found with this ID");
+      console.log(" No vehicle found with this ID");
       return res.status(404).json({ success: false, message: "Not found" });
     }
 
     console.log("Vehicle marked as done →", {
       id: updated._id,
       isDone: updated.isDone,
+      completedAt: updated.completedAt,
+    });
+    await logAudit(req.user, "Marked Vehicle as Done", {
+      plateNumber: updated.plateNumber,
       completedAt: updated.completedAt,
     });
 

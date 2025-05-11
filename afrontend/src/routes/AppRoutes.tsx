@@ -42,6 +42,7 @@ import InvoiceDetails from "@components/features/invoices/pages/InvoiceDetails";
 
 import AddCustomer from "@components/features/customers/pages/AddCustomer";
 import DebtorsList from "@components/features/customers/pages/DebtorsList";
+import AuditTrailPage from "@context/AuditTrailPage";
 
 const AppRoutes = () => {
   return (
@@ -327,7 +328,18 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route
+        path="/admin/audit-trail"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <AuditTrailPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/logins" replace />} />
     </Routes>
   );
 };

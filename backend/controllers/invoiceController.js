@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Invoice = require("../models/Invoice");
+const logAudit = require("../utils/logAudit");
 
 exports.addInvoice = async (req, res) => {
   try {
@@ -8,6 +9,11 @@ exports.addInvoice = async (req, res) => {
       status: "invoiced",
       paymentStatus: "Paid",
       createdAt: new Date(),
+    });
+    await logAudit(req.user, "Created Invoice", {
+      customerName: invoice.customerName,
+      amount: invoice.serviceCost || invoice.total,
+      paymentStatus: invoice.paymentStatus,
     });
 
     res.status(201).json({ success: true, data: invoice });

@@ -1,17 +1,24 @@
-// controllers/payslipController.js
 const Payslip = require("../models/Payslip");
+const logAudit = require("../utils/logAudit");
 
-// Save payslip
 exports.addPayslip = async (req, res) => {
   try {
     const now = new Date();
-    req.body.month = now.getMonth() + 1; // ✅ adds month
-    req.body.year = now.getFullYear(); // ✅ adds year
+    req.body.month = now.getMonth() + 1;
+    req.body.year = now.getFullYear();
 
     const payslip = await Payslip.create(req.body);
+    await logAudit(req.user, "Generated Payslip", {
+      employeeId: payslip.employeeId,
+      netPay: payslip.netPay,
+      salary: payslip.salary,
+      month: payslip.month,
+      year: payslip.year,
+    });
+
     res.status(201).json({ success: true, data: payslip });
   } catch (error) {
-    console.error("❌ Failed to save payslip:", error);
+    console.error("Failed to save payslip:", error);
     res.status(500).json({ success: false, message: "Failed to save payslip" });
   }
 };

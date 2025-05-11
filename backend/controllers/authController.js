@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const User = require("../models/userModel");
+const logAudit = require("../utils/logAudit");
 
 exports.register = async (req, res) => {
   const { username, email, password, confirmPassword } = req.body;
@@ -18,7 +19,23 @@ exports.register = async (req, res) => {
     return res.status(409).json({ message: "User already exists" });
 
   const hashed = await bcrypt.hash(password, 10);
-  const user = new User({ username, email, password: hashed });
+  // Optional: Get role from frontend (default to staff)
+  const role = req.body.role || "staff";
+
+  //  Restrict admin creation
+  if (role === "admin") {
+    const existingAdmin = await User.findOne({ role: "admin" });
+    if (existingAdmin) {
+      return res.status(403).json({ message: "An admin already exists" });
+    }
+  }
+
+  const user = new User({
+    username,
+    email,
+    password: hashed,
+    role,
+  });
 
   await user.save();
   return res.status(201).json({ message: "Registered successfully", user });
@@ -26,24 +43,39 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
+  console.log("Login request received:", username);
 
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ $or: [{ username }, { email: username }] });
 
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+  if (!user) {
+    console.log("User not found");
+    return res.status(401).json({ message: "Invalid username or password" });
+  }
+
+  const match = await bcrypt.compare(password, user.password);
+  console.log("Password match result:", match);
+
+  if (!match) {
     return res.status(401).json({ message: "Invalid username or password" });
   }
 
   const token = jwt.sign(
-    { id: user._id, username: user.username },
+    { id: user._id, username: user.username, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
+  await logAudit(user, "User Logged In", {
+    email: user.email,
+    role: user.role,
+  });
+
   res.status(200).json({
     token,
     user: {
       id: user._id,
       username: user.username,
       email: user.email,
+      role: user.role,
     },
   });
 };
@@ -116,4 +148,9 @@ exports.resetPassword = async (req, res) => {
   await user.save();
 
   res.status(200).json({ message: "Password has been reset" });
+};
+
+exports.adminExists = async (req, res) => {
+  const admin = await User.findOne({ role: "admin" });
+  res.status(200).json({ exists: !!admin });
 };

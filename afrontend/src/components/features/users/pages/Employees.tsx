@@ -22,7 +22,10 @@ type EmployeeForm = z.infer<typeof schema>;
 
 const Employees = () => {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
   const [employeeList, setEmployeeList] = useState<EmployeeForm[]>([]);
+  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -58,16 +61,35 @@ const Employees = () => {
 
   const onSubmit = async (data: EmployeeForm) => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/employees/add`, data);
+      await axios.post(`${import.meta.env.VITE_API_URL}/employees/add`, data, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setServerError("");
       toast.success("Employee saved to system");
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/employees`
       );
       setEmployeeList(response.data.data);
       reset();
-    } catch (error) {
-      console.error("Failed to save employee:", error);
-      toast.error("Failed to save employee");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error("Failed to save employee:", error);
+
+        if (error.response?.status === 403 || error.response?.status === 401) {
+          setServerError(
+            error.response.data.message || "Access denied. Admin only."
+          );
+        } else if (error.code === "ERR_NETWORK") {
+          setServerError("Network error. Please check your connection.");
+        } else {
+          setServerError("Failed to save employee. Please try again.");
+        }
+      } else {
+        console.error("Unexpected error:", error);
+        setServerError("Unexpected error occurred.");
+      }
     }
   };
 
@@ -82,17 +104,17 @@ const Employees = () => {
   ];
 
   return (
-    <Box className="max-w-6xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
+    <Box className="max-w-6xl p-8 mx-auto mt-10 text-black bg-white shadow-xl rounded-xl">
       <Typography
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Add Employee
       </Typography>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2"
       >
         <TextField
           label="Full Name"
@@ -130,22 +152,29 @@ const Employees = () => {
           InputLabelProps={{ shrink: true }}
           fullWidth
         />
-        <div className="md:col-span-2">
-          <Button type="submit" variant="contained" color="primary" fullWidth>
+        <div className="flex justify-center md:col-span-2">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            className="px-8"
+          >
             Save Employee
           </Button>
         </div>
       </form>
 
       <Box className="mt-10">
-        <Button
-          variant="contained"
-          color="secondary"
-          style={{ marginBottom: "1rem" }}
-          onClick={() => navigate("/users/accounts")}
-        >
-          Go to Payslip Processing
-        </Button>
+        {user.role === "admin" && (
+          <Button
+            variant="contained"
+            color="primary"
+            style={{ marginBottom: "1rem" }}
+            onClick={() => navigate("/users/accounts")}
+          >
+            Process Payslip
+          </Button>
+        )}
 
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
           Registered Employees
@@ -153,6 +182,12 @@ const Employees = () => {
         <div
           style={{ height: employeeList.length > 0 ? 500 : 100, width: "100%" }}
         >
+          {serverError && (
+            <div className="mb-4 font-semibold text-center text-red-600">
+              {serverError}
+            </div>
+          )}
+
           <DataGrid
             rows={employeeList.map((emp, index) => ({ id: index + 1, ...emp }))}
             columns={columns}

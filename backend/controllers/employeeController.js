@@ -1,8 +1,15 @@
 const Employee = require("../models/Employee");
+const logAudit = require("../utils/logAudit");
 
 exports.addEmployee = async (req, res) => {
   try {
     const employee = await Employee.create(req.body);
+    await logAudit(req.user, "Added Employee", {
+      fullName: employee.fullName,
+      position: employee.position,
+      salary: employee.salary,
+    });
+
     res.status(201).json({ success: true, data: employee });
   } catch (error) {
     console.error("Error adding employee:", error);

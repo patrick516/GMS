@@ -34,7 +34,7 @@ const MainLayout = ({ children }: { children: ReactNode }) => {
                     {user?.username || "Guest"}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {user?.email || "No email"}
+                    {user?.role || "Unknown role"}
                   </div>
                 </div>
                 <button

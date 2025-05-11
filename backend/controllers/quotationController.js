@@ -1,9 +1,18 @@
 const Quotation = require("../models/Quotation");
+const logAudit = require("../utils/logAudit");
 
-// Create a new quotation
 exports.createQuotation = async (req, res) => {
   try {
     const newQuote = await Quotation.create(req.body);
+
+    //  Log the quotation creation
+    await logAudit(req.user, "Created Quotation", {
+      customerName: newQuote.customerName,
+      problemDescription: newQuote.problemDescription,
+      serviceCost: newQuote.serviceCost,
+      status: newQuote.status || "pending",
+    });
+
     res.status(201).json({ success: true, data: newQuote });
   } catch (err) {
     console.error("Error saving quotation:", err);

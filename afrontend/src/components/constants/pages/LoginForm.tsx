@@ -1,20 +1,25 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@hooks/useAuth"; // ✅ import context hook
+import { useAuth } from "@hooks/useAuth";
+
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuth(); // ✅ use context
+  const { setUser } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
+      console.log("Attempting login with:", username, password);
+
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/login`,
         {
@@ -23,7 +28,7 @@ const LoginForm = () => {
         }
       );
 
-      setUser(res.data.user); // ✅ update context instantly
+      setUser(res.data.user);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
@@ -51,17 +56,22 @@ const LoginForm = () => {
         />
       </div>
 
-      <div>
-        <label className="block mb-1 text-sm font-medium text-gray-700">
-          Password
-        </label>
+      <div className="relative">
         <input
-          type="password"
-          className="w-full px-3 py-2 border rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          type={showPassword ? "text" : "password"}
+          className="w-full px-3 py-2 pr-10 border rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          className="absolute right-3 top-2.5 text-gray-500 hover:text-black focus:outline-none"
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+        </button>
       </div>
 
       <button

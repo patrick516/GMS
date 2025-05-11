@@ -5,7 +5,10 @@ const {
   getEmployees,
 } = require("../controllers/employeeController");
 
-router.post("/add", addEmployee);
-router.get("/", getEmployees);
+const verifyToken = require("../middleware/verifyToken");
+const isAdmin = require("../middleware/isAdmin");
+
+router.post("/add", verifyToken, isAdmin, addEmployee);
+router.get("/", verifyToken, getEmployees); // optional: restrict to logged-in users
 
 module.exports = router;

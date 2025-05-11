@@ -7,7 +7,9 @@ const RegisterForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "admin",
   });
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -32,18 +34,36 @@ const RegisterForm = () => {
         email,
         password,
         confirmPassword,
+        role: formData.role,
       });
 
       setSuccess("Account created successfully!");
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         username: "",
         email: "",
         password: "",
         confirmPassword: "",
-      });
+      }));
+
+      setError("");
     } catch (err) {
       console.error("Registration error:", err);
-      setError("Registration failed. Try again.");
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 409) {
+          // Unique email error
+          setError(err.response.data.message || "Email already registered.");
+        } else if (err.code === "ERR_NETWORK") {
+          // Network problem
+          setError("Network error. Please check your connection.");
+        } else {
+          // Other backend errors
+          setError(err.response?.data?.message || "Registration failed.");
+        }
+      } else {
+        // Fallback for unknown error
+        setError("Unexpected error occurred. Please try again.");
+      }
     }
   };
 
