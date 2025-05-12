@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const verifyToken = require("../middleware/verifyToken");
 const isAdmin = require("../middleware/isAdmin");
+const { deleteLogsByUser } = require("../controllers/auditController");
 const AuditLog = require("../models/AuditLog");
 
+// Existing GET route
 router.get("/logs", verifyToken, isAdmin, async (req, res) => {
   const { startDate, endDate } = req.query;
 
@@ -27,5 +29,7 @@ router.get("/logs", verifyToken, isAdmin, async (req, res) => {
       .json({ success: false, message: "Failed to load audit logs" });
   }
 });
+
+router.delete("/logs/:userId", verifyToken, deleteLogsByUser);
 
 module.exports = router;

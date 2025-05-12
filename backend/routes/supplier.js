@@ -5,7 +5,9 @@ const {
   getSuppliers,
 } = require("../controllers/supplierController");
 
-router.post("/add", addSupplier);
-router.get("/", getSuppliers);
+const verifyToken = require("../middleware/verifyToken");
+
+router.post("/add", verifyToken, addSupplier);
+router.get("/", verifyToken, getSuppliers);
 
 module.exports = router;

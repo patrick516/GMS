@@ -14,7 +14,7 @@ const MainLayout = ({ children }: { children: ReactNode }) => {
       <Sidebar />
       <div className="flex flex-col flex-grow overflow-hidden">
         <header className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 ml-5 mr-5 bg-white shadow">
-          <h1 className="text-xl font-bold text-gray-800 uppercase">
+          <h1 className="mb-4 text-3xl font-bold tracking-wider text-gray-700 md:text-2.5xl drop-shadow-lg uppercase">
             Uas Motors Garage Inventory Management System
           </h1>
 

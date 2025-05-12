@@ -13,6 +13,14 @@ exports.addEmployee = async (req, res) => {
     res.status(201).json({ success: true, data: employee });
   } catch (error) {
     console.error("Error adding employee:", error);
+
+    // Handle duplicate email error
+    if (error.code === 11000 && error.keyPattern?.email) {
+      return res
+        .status(409)
+        .json({ success: false, message: "Email already in use" });
+    }
+
     res.status(500).json({ success: false, message: "Failed to add employee" });
   }
 };

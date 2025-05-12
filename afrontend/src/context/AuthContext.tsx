@@ -5,9 +5,16 @@ interface AuthContextType {
     id: string;
     username: string;
     email: string;
+    role: "admin" | "staff";
   } | null;
+
   setUser: (
-    user: { id: string; username: string; email: string } | null
+    user: {
+      id: string;
+      username: string;
+      email: string;
+      role: "admin" | "staff";
+    } | null
   ) => void;
 }
 

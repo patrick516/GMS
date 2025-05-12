@@ -7,11 +7,11 @@ const {
   deleteInventory,
 } = require("../controllers/productController");
 
-router.post("/add", addInventory);
-router.get("/", getInventory);
-router.put("/update/:id", updateInventory);
-router.delete("/:id", deleteInventory);
+const verifyToken = require("../middleware/verifyToken");
 
-module.exports = router;
+router.post("/add", verifyToken, addInventory);
+router.get("/", verifyToken, getInventory);
+router.put("/update/:id", verifyToken, updateInventory);
+router.delete("/:id", verifyToken, deleteInventory);
 
 module.exports = router;

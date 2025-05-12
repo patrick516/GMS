@@ -54,29 +54,48 @@ const AddVehicle = () => {
       notes: "",
     },
   });
-
   useEffect(() => {
     const fetchCustomersAndEmployees = async () => {
       try {
+        const token = localStorage.getItem("token");
+
         const customerRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/customers`
+          `${import.meta.env.VITE_API_URL}/customers`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
         const customerList = customerRes.data.data.map((c: any) => ({
           id: c._id,
-          name: c.fullName || c.name,
+          name:
+            c.fullName ||
+            c.name ||
+            c.username ||
+            c.email?.split("@")[0] ||
+            "Unnamed",
         }));
         setCustomers(customerList);
 
         const employeeRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/employees`
+          `${import.meta.env.VITE_API_URL}/employees`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
         const employeeList = employeeRes.data.data.map((e: any) => ({
           id: e._id,
-          name: e.fullName,
+          name: e.fullName || e.name || e.email?.split("@")[0] || "Unnamed",
         }));
         setEmployees(employeeList);
       } catch (err) {
         console.error("Failed to load customers or employees:", err);
+        toast.error("Authorization failed or server error.");
       }
     };
 

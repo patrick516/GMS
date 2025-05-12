@@ -49,13 +49,19 @@ const Employees = () => {
     const fetchEmployees = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/employees`
+          `${import.meta.env.VITE_API_URL}/employees`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
         setEmployeeList(res.data.data);
       } catch (error) {
         console.error("Failed to fetch employees:", error);
       }
     };
+
     fetchEmployees();
   }, []);
 
@@ -69,15 +75,26 @@ const Employees = () => {
       setServerError("");
       toast.success("Employee saved to system");
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/employees`
+        `${import.meta.env.VITE_API_URL}/employees`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
+
       setEmployeeList(response.data.data);
       reset();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.error("Failed to save employee:", error);
 
-        if (error.response?.status === 403 || error.response?.status === 401) {
+        if (error.response?.status === 409) {
+          setServerError("Email already in use.");
+        } else if (
+          error.response?.status === 403 ||
+          error.response?.status === 401
+        ) {
           setServerError(
             error.response.data.message || "Access denied. Admin only."
           );
@@ -189,7 +206,8 @@ const Employees = () => {
           )}
 
           <DataGrid
-            rows={employeeList.map((emp, index) => ({ id: index + 1, ...emp }))}
+            getRowId={(row) => row._id}
+            rows={employeeList}
             columns={columns}
             pageSizeOptions={[5, 10]}
             initialState={{

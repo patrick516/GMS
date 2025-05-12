@@ -19,6 +19,7 @@ exports.addVehicle = async (req, res) => {
     } = req.body;
 
     console.log("Incoming vehicle data:", req.body);
+    console.log("AUDIT -> req.user:", req.user);
 
     if (!customerId && !customerName) {
       return res
@@ -56,39 +57,54 @@ exports.addVehicle = async (req, res) => {
 
 exports.getCustomersWithVehicles = async (req, res) => {
   try {
-    const vehicles = await Vehicle.find({}, "customerId customerName");
+    const customers = await Customer.aggregate([
+      {
+        $lookup: {
+          from: "vehicles",
+          let: { customerId: "$_id", fullName: "$fullName" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ["$customerId", "$$customerId"] },
+                    {
+                      $and: [
+                        { $eq: ["$customerId", null] },
+                        { $eq: ["$customerName", "$$fullName"] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                plateNumber: 1,
+                model: 1,
+              },
+            },
+          ],
+          as: "vehicles",
+        },
+      },
+      {
+        $project: {
+          fullName: 1,
+          email: 1,
+          phone: 1,
+          vehicles: 1,
+        },
+      },
+    ]);
 
-    const customerIds = vehicles
-      .filter((v) => v.customerId)
-      .map((v) => v.customerId.toString());
-
-    const manualNames = vehicles
-      .filter((v) => !v.customerId && v.customerName)
-      .map((v) => ({
-        name: v.customerName,
-        id: null,
-        phone: "",
-        email: "",
-      }));
-
-    const dbCustomers = await Customer.find(
-      { _id: { $in: customerIds } },
-      { _id: 1, name: 1, fullName: 1, email: 1, phone: 1 }
-    );
-
-    const mapped = dbCustomers.map((c) => ({
-      id: c._id,
-      name: c.fullName || c.name,
-      phone: c.phone || "",
-      email: c.email || "",
-    }));
-
-    const all = [...mapped, ...manualNames];
-
-    res.status(200).json({ success: true, data: all });
+    res.status(200).json({ success: true, data: customers });
   } catch (err) {
-    console.error(" Failed to get customers with vehicles:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Error fetching customers with vehicles:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch customers" });
   }
 };
 

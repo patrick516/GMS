@@ -6,11 +6,10 @@ const {
   markReorderAsDone,
 } = require("../controllers/reorderController");
 
-const {} = require("../controllers/reorderController");
+const verifyToken = require("../middleware/verifyToken");
 
-router.post("/whatsapp", sendReorderToSupplier);
-
-router.get("/list", getAllReorders);
-router.put("/mark-done/:id", markReorderAsDone);
+router.post("/whatsapp", verifyToken, sendReorderToSupplier);
+router.get("/list", verifyToken, getAllReorders);
+router.put("/mark-done/:id", verifyToken, markReorderAsDone);
 
 module.exports = router;

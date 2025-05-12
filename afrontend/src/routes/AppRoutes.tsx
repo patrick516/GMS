@@ -339,7 +339,7 @@ const AppRoutes = () => {
         }
       />
 
-      <Route path="*" element={<Navigate to="/logins" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };

@@ -37,6 +37,7 @@ const LoginForm = () => {
       console.log(err);
       setError("Invalid username or password");
     }
+    console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
   };
 
   return (

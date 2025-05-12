@@ -8,10 +8,12 @@ const {
   getQuotationSummary,
 } = require("../controllers/quotationController");
 
-router.post("/add", createQuotation);
-router.get("/all", getAllQuotations);
-router.patch("/archive/:id", archiveQuotation);
-router.patch("/mark-invoiced/:id", markAsInvoiced);
-router.get("/summary", getQuotationSummary);
+const verifyToken = require("../middleware/verifyToken");
+
+router.post("/add", verifyToken, createQuotation);
+router.get("/all", verifyToken, getAllQuotations);
+router.patch("/archive/:id", verifyToken, archiveQuotation);
+router.patch("/mark-invoiced/:id", verifyToken, markAsInvoiced);
+router.get("/summary", verifyToken, getQuotationSummary);
 
 module.exports = router;

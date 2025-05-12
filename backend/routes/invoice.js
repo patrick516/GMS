@@ -4,12 +4,14 @@ const {
   addInvoice,
   getInvoiceById,
   getInvoiceSummary,
-  getAllInvoices, // ✅ include it
+  getAllInvoices,
 } = require("../controllers/invoiceController");
 
-router.post("/add", addInvoice);
-router.get("/summary", getInvoiceSummary);
-router.get("/all", getAllInvoices);
-router.get("/:id", getInvoiceById);
+const verifyToken = require("../middleware/verifyToken");
+
+router.post("/add", verifyToken, addInvoice);
+router.get("/summary", verifyToken, getInvoiceSummary);
+router.get("/all", verifyToken, getAllInvoices);
+router.get("/:id", verifyToken, getInvoiceById);
 
 module.exports = router;

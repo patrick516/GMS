@@ -15,6 +15,7 @@ exports.addInventory = async (req, res) => {
     const newItem = new Inventory(body);
     await newItem.save();
 
+    // Here you are logging the inventory addition.
     await logAudit(req.user, "Added Inventory", {
       name: newItem.name,
       brand: newItem.brand,

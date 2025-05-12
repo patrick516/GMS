@@ -6,8 +6,10 @@ const {
   getStockLevels,
 } = require("../controllers/inventoryController");
 
-router.get("/report", getInventoryReport);
-router.get("/report-detailed", getInventoryReportDetailed);
-router.get("/stock-levels", getStockLevels);
+const verifyToken = require("../middleware/verifyToken");
+
+router.get("/report", verifyToken, getInventoryReport);
+router.get("/report-detailed", verifyToken, getInventoryReportDetailed);
+router.get("/stock-levels", verifyToken, getStockLevels);
 
 module.exports = router;
