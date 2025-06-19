@@ -81,7 +81,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/supplier`,
+          `${import.meta.env.VITE_API_URL}/api/supplier`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
         const token = localStorage.getItem("token");
 
         const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/upload`,
+          `${import.meta.env.VITE_API_URL}/api/upload`,
           formData,
 
           {
@@ -144,7 +144,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
         // 3. If editing
         const itemId = itemToEdit._id || itemToEdit.id;
         await axios.put(
-          `${import.meta.env.VITE_API_URL}/inventory/update/${itemId}`,
+          `${import.meta.env.VITE_API_URL}/api/inventory/update/${itemId}`,
           payload,
           {
             headers: {
@@ -161,7 +161,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
       } else {
         // 4. If adding new
         await axios.post(
-          `${import.meta.env.VITE_API_URL}/inventory/add`,
+          `${import.meta.env.VITE_API_URL}/api/inventory/add`,
           payload,
           {
             headers: {
