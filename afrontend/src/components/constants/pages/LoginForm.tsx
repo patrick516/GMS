@@ -20,10 +20,11 @@ const LoginForm = () => {
     setError("");
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/login`,
-        { username, password }
-      );
+      const baseURL = import.meta.env.VITE_API_URL.replace(/\/+$/, ""); // remove trailing slash if present
+      const res = await axios.post(`${baseURL}/api/auth/login`, {
+        username,
+        password,
+      });
 
       const { user, token } = res.data;
 
