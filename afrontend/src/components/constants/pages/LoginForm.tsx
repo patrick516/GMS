@@ -21,7 +21,7 @@ const LoginForm = () => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
+        `${import.meta.env.VITE_API_URL}api//auth/login`,
         { username, password }
       );
 
