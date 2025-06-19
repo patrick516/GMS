@@ -21,7 +21,7 @@ const LoginForm = () => {
 
     try {
       const baseURL = import.meta.env.VITE_API_URL.replace(/\/+$/, ""); // remove trailing slash if present
-      const res = await axios.post(`${baseURL}/api/auth/login`, {
+      const res = await axios.post(`${baseURL}/auth/login`, {
         username,
         password,
       });

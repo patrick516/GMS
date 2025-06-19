@@ -49,7 +49,7 @@ const InventoryList = () => {
         const formatted = inventoryList.map((item: any, index: number) => {
           const match = salesData.find((s: any) => s._id === item._id);
 
-          console.log("✅ MATCH FOUND:", {
+          console.log(" MATCH FOUND:", {
             name: item.name,
             cost: item.totalCosts,
             sales: match?.calculatedSales,
