@@ -1,0 +1,98 @@
+.
+├── afrontend
+│   ├── components.json
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── logos
+│   ├── README.md
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   ├── components
+│   │   ├── context
+│   │   ├── hooks
+│   │   ├── layouts
+│   │   ├── main.tsx
+│   │   ├── pages
+│   │   ├── routes
+│   │   ├── services
+│   │   ├── types
+│   │   ├── utils
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── backend
+│   ├── config.js
+│   ├── controllers
+│   │   ├── auditController.js
+│   │   ├── authController.js
+│   │   ├── customerController.js
+│   │   ├── debtorController.js
+│   │   ├── employeeController.js
+│   │   ├── inventoryController.js
+│   │   ├── invoiceController.js
+│   │   ├── notify.js
+│   │   ├── payslipController.js
+│   │   ├── productController.js
+│   │   ├── quotationController.js
+│   │   ├── reorderController.js
+│   │   ├── reportController.js
+│   │   ├── supplierController.js
+│   │   └── vehicleController.js
+│   ├── db.js
+│   ├── index.js
+│   ├── middleware
+│   │   ├── isAdmin.js
+│   │   └── verifyToken.js
+│   ├── models
+│   │   ├── AuditLog.js
+│   │   ├── Customer.js
+│   │   ├── Debtor.js
+│   │   ├── Employee.js
+│   │   ├── Inventory.js
+│   │   ├── Invoice.js
+│   │   ├── Payslip.js
+│   │   ├── Product.js
+│   │   ├── Quotation.js
+│   │   ├── Reorder.js
+│   │   ├── Supplier.js
+│   │   ├── userModel.js
+│   │   └── Vehicle.js
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── routes
+│   │   ├── audit.js
+│   │   ├── authRoute.js
+│   │   ├── customer.js
+│   │   ├── debtor.js
+│   │   ├── employee.js
+│   │   ├── inventory.js
+│   │   ├── inventory.route.js
+│   │   ├── invoice.js
+│   │   ├── notify.js
+│   │   ├── payslip.js
+│   │   ├── quotation.js
+│   │   ├── reorder.js
+│   │   ├── report.js
+│   │   ├── supplier.js
+│   │   ├── upload.route.js
+│   │   └── vehicle.js
+│   ├── uploads
+│   │   ├── 1743953576810-ellen G-White.pdf
+│   │   ├── 1743963481549-laptops.jpg
+│   │   ├── 1744036754470-gallery.webp
+│   │   └── 1744228049297-gallery2.webp
+│   └── utils
+│       ├── logAudit.js
+│       └── twilio.js
+└── structure.txt
+
+22 directories, 74 files

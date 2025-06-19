@@ -39,8 +39,14 @@ const CustomerForm = () => {
   useEffect(() => {
     const fetchInventoryList = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/inventory`
+          `${import.meta.env.VITE_API_URL}/inventory`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         const addedInventory = response.data;
@@ -161,9 +167,15 @@ const CustomerForm = () => {
     };
 
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/customers`,
-        newCustomer
+        newCustomer,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       console.log("Customer saved:", response.data.data);
       toast.success("Customer added successfully");

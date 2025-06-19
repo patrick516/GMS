@@ -79,7 +79,15 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/supplier`);
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/supplier`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setSuppliers(res.data.data);
       } catch (err) {
         console.error("Error fetching suppliers:", err);
@@ -100,12 +108,16 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
       formData.append("file", imageFile);
 
       try {
+        const token = localStorage.getItem("token");
+
         const res = await axios.post(
           `${import.meta.env.VITE_API_URL}/upload`,
           formData,
+
           {
             headers: {
               "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -126,12 +138,19 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
     };
 
     try {
+      const token = localStorage.getItem("token");
+
       if (itemToEdit) {
         // 3. If editing
         const itemId = itemToEdit._id || itemToEdit.id;
         await axios.put(
           `${import.meta.env.VITE_API_URL}/inventory/update/${itemId}`,
-          payload
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         toast.success("Inventory updated successfully");
         onUpdate?.({
@@ -143,7 +162,12 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
         // 4. If adding new
         await axios.post(
           `${import.meta.env.VITE_API_URL}/inventory/add`,
-          payload
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         toast.success("Inventory added successfully");
         reset();

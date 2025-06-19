@@ -24,8 +24,14 @@ const DebtorList = () => {
   useEffect(() => {
     const fetchDebtors = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/customers/debtors`
+          `${import.meta.env.VITE_API_URL}/customers/debtors`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const data = response.data.data;
         setDebtors(data);
@@ -72,9 +78,17 @@ const DebtorList = () => {
     }
 
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/customers/${id}/pay`, {
-        amount,
-      });
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/customers/${id}/pay`,
+        { amount },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const updated = debtors.map((d) => {
         if (d._id === id) {
@@ -113,8 +127,8 @@ const DebtorList = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto mt-10 bg-white shadow rounded-xl p-6 text-black">
-      <h2 className="text-2xl font-bold mb-4">Debtor List</h2>
+    <div className="p-6 mx-auto mt-10 text-black bg-white shadow max-w-7xl rounded-xl">
+      <h2 className="mb-4 text-2xl font-bold">Debtor List</h2>
 
       <div className="flex justify-between mb-6 text-xl font-bold ">
         <p>
@@ -132,15 +146,15 @@ const DebtorList = () => {
       </div>
 
       {fullPaymentMessage && (
-        <div className="bg-green-100 border border-green-400 text-green-800 p-4 rounded text-center mb-4">
+        <div className="p-4 mb-4 text-center text-green-800 bg-green-100 border border-green-400 rounded">
           {fullPaymentMessage}
         </div>
       )}
 
       <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300 rounded overflow-hidden">
+        <table className="min-w-full overflow-hidden border border-gray-300 rounded">
           <thead className="bg-gray-100">
-            <tr className="text-left text-xl text-gray-700">
+            <tr className="text-xl text-left text-gray-700">
               <th className="p-3">No:</th>
               <th className="p-3">Name</th>
               <th className="p-3">Paid</th>
@@ -153,7 +167,7 @@ const DebtorList = () => {
           <tbody>
             {debtors.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-5 text-gray-500">
+                <td colSpan={7} className="py-5 text-center text-gray-500">
                   No debtors found.
                 </td>
               </tr>
@@ -161,16 +175,16 @@ const DebtorList = () => {
               debtors.map((debtor, index) => (
                 <tr
                   key={debtor._id}
-                  className="border-t border-gray-200 text-lg"
+                  className="text-lg border-t border-gray-200"
                 >
                   <td className="p-3">{index + 1}</td>
                   <td className="p-3">{debtor.name}</td>
                   <td className="p-3">{formatCurrency(debtor.payment)}</td>
                   <td className="p-3">{formatCurrency(debtor.balance)}</td>
-                  <td className="p-3 relative">
+                  <td className="relative p-3">
                     <input
                       type="number"
-                      className="w-full border rounded px-2 py-1 text-sm"
+                      className="w-full px-2 py-1 text-sm border rounded"
                       value={paymentInputs[debtor._id] || ""}
                       onChange={(e) =>
                         handleInputChange(debtor._id, Number(e.target.value))
@@ -185,7 +199,7 @@ const DebtorList = () => {
                       disabled={debtor.balance <= 0}
                     />
                     {popupVisible === debtor._id && (
-                      <div className="absolute bottom-full left-0 mb-1 text-base bg-gray-100 text-black p-1 rounded shadow">
+                      <div className="absolute left-0 p-1 mb-1 text-base text-black bg-gray-100 rounded shadow bottom-full">
                         Remaining:{" "}
                         {formatCurrency(
                           debtor.balance - (paymentInputs[debtor._id] || 0)

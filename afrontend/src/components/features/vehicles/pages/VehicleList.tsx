@@ -23,28 +23,52 @@ const VehicleList = () => {
   const [completedVehicles, setCompletedVehicles] = useState<Vehicle[]>([]);
 
   useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_API_URL}/vehicles/completed`)
-      .then((res) => {
+    const fetchCompletedVehicles = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/vehicles/completed`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         setCompletedVehicles(res.data.data || []);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error loading completed vehicles:", err);
         toast.error("Failed to load completed vehicles");
-      });
+      }
+    };
+
+    fetchCompletedVehicles();
   }, []);
 
-  const handleContact = (vehicle: Vehicle) => {
+  const handleContact = async (vehicle: Vehicle) => {
     const message = `Hello ${vehicle.customerName}, your vehicle (${vehicle.plateNumber} - ${vehicle.model}) has been completed. Please pick it up.`;
 
-    // Example: WhatsApp or SMS trigger (pseudo call)
-    axios
-      .post(`${import.meta.env.VITE_API_URL}/notify`, {
-        phone: vehicle.customerPhone,
-        message,
-      })
-      .then(() => toast.success("Customer notified"))
-      .catch(() => toast.error("Failed to send notification"));
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/notify`,
+        {
+          phone: vehicle.customerPhone,
+          message,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Customer notified");
+    } catch (err) {
+      toast.error("Failed to send notification");
+      console.error("Notification error:", err);
+    }
   };
 
   return (

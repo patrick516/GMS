@@ -25,10 +25,21 @@ const InventoryList = () => {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
+        const token = localStorage.getItem("token");
+
         const [inventoryRes, salesRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/inventory`),
+          axios.get(`${import.meta.env.VITE_API_URL}/inventory`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
           axios.get(
-            `${import.meta.env.VITE_API_URL}/inventory/report-detailed`
+            `${import.meta.env.VITE_API_URL}/inventory/report-detailed`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           ),
         ]);
 
@@ -38,7 +49,6 @@ const InventoryList = () => {
         const formatted = inventoryList.map((item: any, index: number) => {
           const match = salesData.find((s: any) => s._id === item._id);
 
-          // 🔍 Log what's being merged
           console.log("✅ MATCH FOUND:", {
             name: item.name,
             cost: item.totalCosts,
@@ -49,7 +59,7 @@ const InventoryList = () => {
             ...item,
             id: item._id || index + 1,
             calculatedSales: match?.calculatedSales || 0,
-            totalCosts: Number(item.totalCosts) || 0, // 🟢 Make sure it's a number
+            totalCosts: Number(item.totalCosts) || 0,
           };
         });
 

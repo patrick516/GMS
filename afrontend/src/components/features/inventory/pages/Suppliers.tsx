@@ -42,8 +42,15 @@ const Supplier = () => {
 
   const fetchSuppliers = async () => {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/supplier`
+        `${import.meta.env.VITE_API_URL}/supplier`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setSuppliers(response.data.data);
     } catch (error) {
@@ -54,8 +61,14 @@ const Supplier = () => {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/inventory`
+          `${import.meta.env.VITE_API_URL}/inventory`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const inventory = response.data.map((item: any) => ({
           _id: item._id,
@@ -78,8 +91,10 @@ const Supplier = () => {
       : `+265${data.phone?.replace(/^0+/, "")}`;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/supplier/add`,
+
         {
           name: data.supplierName,
           email: data.email,
@@ -87,6 +102,12 @@ const Supplier = () => {
           company: "",
           address: data.address,
           productId: data.productId,
+        },
+
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 

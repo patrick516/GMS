@@ -8,10 +8,17 @@ const User = require("../models/userModel");
 const logAudit = require("../utils/logAudit");
 
 exports.register = async (req, res) => {
-  const { username, email, password, confirmPassword } = req.body;
+  let { username, email, password, confirmPassword, role } = req.body;
 
-  if (!username || !email || !password || password !== confirmPassword) {
+  const defaultPassword = "12345";
+  const isAdminTriggered = !password;
+
+  if (!username || !email || (password && password !== confirmPassword)) {
     return res.status(400).json({ message: "Invalid input fields" });
+  }
+
+  if (!password) {
+    password = defaultPassword;
   }
 
   const existingUser = await User.findOne({ email });
@@ -19,10 +26,8 @@ exports.register = async (req, res) => {
     return res.status(409).json({ message: "User already exists" });
 
   const hashed = await bcrypt.hash(password, 10);
-  // Optional: Get role from frontend (default to staff)
-  const role = req.body.role || "staff";
+  role = role || "staff";
 
-  //  Restrict admin creation
   if (role === "admin") {
     const existingAdmin = await User.findOne({ role: "admin" });
     if (existingAdmin) {
@@ -35,6 +40,7 @@ exports.register = async (req, res) => {
     email,
     password: hashed,
     role,
+    mustChangePassword: password === defaultPassword,
   });
 
   await user.save();
@@ -76,6 +82,7 @@ exports.login = async (req, res) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      mustChangePassword: user.mustChangePassword,
     },
   });
 };
@@ -153,4 +160,31 @@ exports.resetPassword = async (req, res) => {
 exports.adminExists = async (req, res) => {
   const admin = await User.findOne({ role: "admin" });
   res.status(200).json({ exists: !!admin });
+};
+
+exports.changePassword = async (req, res) => {
+  const { userId, newPassword } = req.body;
+
+  if (!userId || !newPassword) {
+    return res
+      .status(400)
+      .json({ message: "User ID and new password are required" });
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    user.mustChangePassword = false;
+    await user.save();
+
+    await logAudit(user, "Password Changed", { email: user.email });
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Error updating password:", err);
+    res.status(500).json({ message: "Failed to update password" });
+  }
 };

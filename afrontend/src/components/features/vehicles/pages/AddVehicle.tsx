@@ -109,10 +109,16 @@ const AddVehicle = () => {
     };
 
     try {
+      const token = localStorage.getItem("token");
       console.log("Final payload:", finalData);
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/vehicles/add`,
-        finalData
+        finalData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       toast.success("Vehicle added successfully");
       reset();

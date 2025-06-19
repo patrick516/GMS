@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "staff"],
       default: "staff",
     },
+
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

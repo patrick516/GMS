@@ -121,6 +121,7 @@ const AuditTrailPage = () => {
   }
 
   const groupedLogs = logs.reduce<Record<string, LogEntry[]>>((acc, log) => {
+    if (!log.userId || !log.userId._id) return acc;
     const uid = log.userId._id;
     if (!acc[uid]) acc[uid] = [];
     acc[uid].push(log);

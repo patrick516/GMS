@@ -47,6 +47,9 @@ const Accounts = () => {
   useEffect(() => {
     const fetchEmployeesForCurrentMonth = async () => {
       try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
         const now = new Date();
         const month = now.getMonth() + 1;
         const year = now.getFullYear();
@@ -54,12 +57,14 @@ const Accounts = () => {
         const processedRes = await axios.get(
           `${
             import.meta.env.VITE_API_URL
-          }/payslips/processed?month=${month}&year=${year}`
+          }/payslips/processed?month=${month}&year=${year}`,
+          { headers }
         );
         const processedIds: string[] = processedRes.data.data;
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/employees`
+          `${import.meta.env.VITE_API_URL}/employees`,
+          { headers }
         );
         const unprocessedEmployees = response.data.data.filter(
           (emp: Employee) => !processedIds.includes(emp._id)
@@ -68,7 +73,8 @@ const Accounts = () => {
         setPayQueue(unprocessedEmployees);
 
         const payslipsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/payslips/all`
+          `${import.meta.env.VITE_API_URL}/payslips/all`,
+          { headers }
         );
         const data = payslipsRes.data.data.map((p: any) => ({
           ...p,
@@ -158,15 +164,25 @@ const Accounts = () => {
     };
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/payslips/add`, {
-        employeeId: emp._id,
-        daysAbsent: payslip.daysAbsent,
-        tax: payslip.tax,
-        allowances: payslip.allowances,
-        otherDeductions: payslip.otherDeductions,
-        netPay: payslip.netPay,
-        salary: payslip.salary,
-      });
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/payslips/add`,
+        {
+          employeeId: emp._id,
+          daysAbsent: payslip.daysAbsent,
+          tax: payslip.tax,
+          allowances: payslip.allowances,
+          otherDeductions: payslip.otherDeductions,
+          netPay: payslip.netPay,
+          salary: payslip.salary,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setCompletedPayslips((prev) => [...prev, payslip]);
       setPayQueue((prev) => prev.filter((e) => e._id !== emp._id));
@@ -280,10 +296,10 @@ const Accounts = () => {
   ];
 
   return (
-    <Box className="max-w-7xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
+    <Box className="p-8 mx-auto mt-10 text-black bg-white shadow-xl max-w-7xl rounded-xl">
       <Typography
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Payslip Processing
       </Typography>
@@ -295,7 +311,7 @@ const Accounts = () => {
       {payQueue.slice(0, 2).map((emp) => {
         const data = formData[emp._id] || {};
         return (
-          <Box key={emp._id} className="border p-4 rounded-lg mb-4 bg-gray-50">
+          <Box key={emp._id} className="p-4 mb-4 border rounded-lg bg-gray-50">
             <Typography className="mb-2 font-semibold">
               {emp.fullName} ({emp.position})
             </Typography>

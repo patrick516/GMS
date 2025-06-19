@@ -114,14 +114,23 @@ const Dashboard = () => {
 
   const handleMarkDone = async (id: string, model: string) => {
     try {
+      const token = localStorage.getItem("token");
+
       await axios.patch(
-        `${import.meta.env.VITE_API_URL}/vehicles/mark-done/${id}`
+        `${import.meta.env.VITE_API_URL}/vehicles/mark-done/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       setVehicleQueue((prev) => prev.filter((v) => v._id !== id));
       toast.success(`${model} marked as repaired`);
     } catch (err) {
       toast.error("Failed to mark as done");
-      console.error(err);
+      console.error("Axios error:", err);
     }
   };
 

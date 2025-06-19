@@ -23,8 +23,15 @@ const Reorder = () => {
   useEffect(() => {
     const fetchReorders = async () => {
       try {
+        const token = localStorage.getItem("token");
+
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/reorder/list`
+          `${import.meta.env.VITE_API_URL}/reorder/list`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setRows(res.data.data);
       } catch (err) {
@@ -37,8 +44,15 @@ const Reorder = () => {
 
   const handleMarkDone = async (id: string) => {
     try {
+      const token = localStorage.getItem("token");
+
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/reorder/mark-done/${id}`
+        `${import.meta.env.VITE_API_URL}/reorder/mark-done/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       setRows((prev) =>
         prev.map((row) => (row._id === id ? { ...row, status: "Done" } : row))
@@ -105,10 +119,10 @@ const Reorder = () => {
   ];
 
   return (
-    <Box className="max-w-6xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
+    <Box className="max-w-6xl p-8 mx-auto mt-10 text-black bg-white shadow-xl rounded-xl">
       <Typography
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Reorder Log
       </Typography>

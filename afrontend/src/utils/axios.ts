@@ -29,7 +29,7 @@ API.interceptors.response.use(
 
       // Delay redirect slightly so user sees the toast
       setTimeout(() => {
-        window.location.href = "/login";
+        window.location.href = "/auth";
       }, 1500);
     }
 

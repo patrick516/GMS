@@ -34,8 +34,14 @@ const StockLevels = () => {
   useEffect(() => {
     const fetchStockLevels = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/inventory/stock-levels`
+          `${import.meta.env.VITE_API_URL}/inventory/stock-levels`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const inventory: InventoryItem[] = response.data.data;
 
@@ -59,17 +65,28 @@ const StockLevels = () => {
 
   const handleReorder = async (item: any) => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/reorder/whatsapp`, {
-        supplierName: item.supplier.name,
-        supplierPhone: item.supplier.phone,
-        productName: item.name,
-        systemUserName: systemUser.name,
-      });
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/reorder/whatsapp`,
+        {
+          supplierName: item.supplier.name,
+          supplierPhone: item.supplier.phone,
+          productName: item.name,
+          systemUserName: systemUser.name,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       toast.success("Reorder message sent to supplier via WhatsApp");
     } catch (err) {
       console.error("WhatsApp reorder failed:", err);
       toast.error("Failed to send WhatsApp reorder message");
     }
+
     setReorderedIds((prev) => [...prev, item.id]);
   };
 
@@ -106,10 +123,10 @@ const StockLevels = () => {
   ];
 
   return (
-    <Box className="max-w-6xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
+    <Box className="max-w-6xl p-8 mx-auto mt-10 text-black bg-white shadow-xl rounded-xl">
       <Typography
         variant="h4"
-        className="text-center mb-6 font-bold text-gray-800"
+        className="mb-6 font-bold text-center text-gray-800"
       >
         Stock Levels
       </Typography>

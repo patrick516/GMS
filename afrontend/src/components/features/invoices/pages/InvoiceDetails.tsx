@@ -32,8 +32,15 @@ const Invoice = () => {
     if (id && id !== "details") {
       const fetchInvoice = async () => {
         try {
+          const token = localStorage.getItem("token");
+
           const res = await axios.get(
-            `${import.meta.env.VITE_API_URL}/invoices/${id}`
+            `${import.meta.env.VITE_API_URL}/invoices/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           if (!res.data.success || !res.data.data) {
             setError("Invoice not found.");
@@ -41,6 +48,7 @@ const Invoice = () => {
             setInvoice(res.data.data);
           }
         } catch (err) {
+          console.log(err);
           setError("Server error while fetching invoice.");
         } finally {
           setLoading(false);
@@ -50,8 +58,14 @@ const Invoice = () => {
     } else {
       const fetchAll = async () => {
         try {
+          const token = localStorage.getItem("token");
           const res = await axios.get(
-            `${import.meta.env.VITE_API_URL}/invoices/all`
+            `${import.meta.env.VITE_API_URL}/invoices/all`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           setInvoices(res.data.data);
           console.log(
@@ -85,9 +99,9 @@ const Invoice = () => {
 
           setInvoices(filtered);
 
-          // ✅ Log the incoming data for verification
+          // Log the incoming data for verification
           console.log(
-            "✅ DataGrid rows ➜",
+            "DataGrid rows ➜",
             res.data.data.map((i: any) => ({
               _id: i._id,
               createdAt: i.createdAt,
@@ -272,8 +286,8 @@ const Invoice = () => {
 
   if (id && invoice && id !== "details") {
     return (
-      <Box className="max-w-3xl mx-auto p-8 bg-white shadow-xl rounded-xl mt-10 text-black">
-        <Typography variant="h4" className="font-bold mb-4 text-center">
+      <Box className="max-w-3xl p-8 mx-auto mt-10 text-black bg-white shadow-xl rounded-xl">
+        <Typography variant="h4" className="mb-4 font-bold text-center">
           Invoice #{invoice._id}
         </Typography>
         <Divider className="mb-4" />
@@ -303,7 +317,7 @@ const Invoice = () => {
           {new Date(invoice.createdAt).toLocaleDateString()}
         </Typography>
         <Divider className="my-4" />
-        <Typography className="italic text-gray-600 text-sm">
+        <Typography className="text-sm italic text-gray-600">
           Thank you for choosing UAS Motors. We appreciate your business.
         </Typography>
         <Button
@@ -319,10 +333,10 @@ const Invoice = () => {
   }
 
   return (
-    <Box className="max-w-7xl mx-auto mt-10 p-6 bg-white shadow-xl rounded-xl text-black">
+    <Box className="p-6 mx-auto mt-10 text-black bg-white shadow-xl max-w-7xl rounded-xl">
       <Typography
         variant="h4"
-        className="mb-4 text-center font-bold text-gray-800"
+        className="mb-4 font-bold text-center text-gray-800"
       >
         All Invoices
       </Typography>
@@ -336,7 +350,7 @@ const Invoice = () => {
         Export Selected
       </Button>
 
-      <Box className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+      <Box className="flex flex-col items-center justify-between gap-4 mb-4 md:flex-row">
         <TextField
           label="Search by Customer or Plate"
           variant="outlined"

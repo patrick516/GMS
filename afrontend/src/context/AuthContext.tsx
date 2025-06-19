@@ -1,21 +1,16 @@
 import { createContext } from "react";
 
-interface AuthContextType {
-  user: {
-    id: string;
-    username: string;
-    email: string;
-    role: "admin" | "staff";
-  } | null;
+interface AuthUser {
+  id: string;
+  username: string;
+  email: string;
+  role: "admin" | "staff";
+  mustChangePassword?: boolean;
+}
 
-  setUser: (
-    user: {
-      id: string;
-      username: string;
-      email: string;
-      role: "admin" | "staff";
-    } | null
-  ) => void;
+interface AuthContextType {
+  user: AuthUser | null;
+  setUser: (user: AuthUser | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

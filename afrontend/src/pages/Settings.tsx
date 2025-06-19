@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { useThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const Settings = () => {
   const { theme, setTheme } = useThemeContext();
@@ -29,6 +30,13 @@ const Settings = () => {
     "Hi {{name}}, please settle your balance of MWK {{amount}}."
   );
 
+  const [newUser, setNewUser] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    role: "staff",
+  });
+
   useEffect(() => {
     const stored = localStorage.getItem("garage-settings");
     if (stored) {
@@ -43,6 +51,32 @@ const Settings = () => {
       setTheme(s.theme);
     }
   }, [setTheme]);
+
+  const handleAddUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/register`,
+        {
+          username: `${newUser.firstName} ${newUser.lastName}`.trim(),
+          email: newUser.email,
+          role: newUser.role,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success("User added successfully!");
+      setNewUser({ firstName: "", lastName: "", email: "", role: "staff" });
+    } catch (err) {
+      console.error("Failed to add user:", err);
+      toast.error("Failed to create user");
+    }
+  };
 
   const handleSave = () => {
     const settings = {
@@ -66,12 +100,13 @@ const Settings = () => {
   };
 
   return (
-    <Box className="max-w-4xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-xl text-black">
-      <Typography variant="h4" className="text-center font-bold mb-6">
+    <Box className="max-w-4xl p-8 mx-auto mt-10 text-black bg-white shadow-xl rounded-xl">
+      <Typography variant="h4" className="mb-8 font-bold text-center">
         System Settings
       </Typography>
 
-      <Box className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* System Settings Form */}
+      <Box className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2">
         <TextField
           label="Default Tax Percentage (%)"
           type="number"
@@ -85,7 +120,6 @@ const Settings = () => {
           <Select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-            fullWidth
           >
             <MenuItem value="MWK">MWK</MenuItem>
             <MenuItem value="ZAR">ZAR</MenuItem>
@@ -104,11 +138,7 @@ const Settings = () => {
 
         <FormControl fullWidth>
           <InputLabel>Theme</InputLabel>
-          <Select
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            fullWidth
-          >
+          <Select value={theme} onChange={(e) => setTheme(e.target.value)}>
             <MenuItem value="light">Light</MenuItem>
             <MenuItem value="dark">Dark</MenuItem>
           </Select>
@@ -141,6 +171,7 @@ const Settings = () => {
           fullWidth
           multiline
           rows={3}
+          className="md:col-span-2"
         />
 
         <TextField
@@ -150,13 +181,71 @@ const Settings = () => {
           fullWidth
           multiline
           rows={3}
+          className="md:col-span-2"
         />
       </Box>
 
-      <Box className="mt-8 text-center">
-        <Button variant="contained" color="primary" onClick={handleSave}>
+      {/* Save Button */}
+      <Box className="mb-12 text-right">
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          className="text-white bg-blue-700 hover:bg-blue-800"
+        >
           Save Settings
         </Button>
+      </Box>
+
+      {/* Add New User Section */}
+      <Box className="p-6 border rounded-lg shadow-sm bg-gray-50">
+        <Typography variant="h6" className="mb-4 font-semibold text-gray-800">
+          Add New User
+        </Typography>
+
+        <Box className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2">
+          <TextField
+            label="First Name"
+            value={newUser.firstName}
+            onChange={(e) =>
+              setNewUser({ ...newUser, firstName: e.target.value })
+            }
+            fullWidth
+          />
+          <TextField
+            label="Last Name"
+            value={newUser.lastName}
+            onChange={(e) =>
+              setNewUser({ ...newUser, lastName: e.target.value })
+            }
+            fullWidth
+          />
+          <TextField
+            label="Email"
+            value={newUser.email}
+            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+            fullWidth
+          />
+          <FormControl fullWidth>
+            <InputLabel>Role</InputLabel>
+            <Select
+              value={newUser.role}
+              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+            >
+              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="staff">Staff</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        <Box className="text-right">
+          <Button
+            variant="contained"
+            onClick={handleAddUser}
+            className="text-white bg-green-700 hover:bg-green-800"
+          >
+            Create User
+          </Button>
+        </Box>
       </Box>
     </Box>
   );

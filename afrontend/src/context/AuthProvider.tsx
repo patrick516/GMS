@@ -6,6 +6,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     id: string;
     username: string;
     email: string;
+    role: "admin" | "staff";
+    mustChangePassword?: boolean;
   } | null>(() => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;

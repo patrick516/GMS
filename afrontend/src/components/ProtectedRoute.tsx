@@ -1,7 +1,8 @@
 import { Navigate } from "react-router-dom";
 import { isTokenExpired } from "@utils/token";
+import { ReactNode } from "react";
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("token");
 
   if (!token || isTokenExpired(token)) {

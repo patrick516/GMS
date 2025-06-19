@@ -33,17 +33,12 @@ const Sidebar = () => {
     <aside className="top-0 left-0 z-50 w-80 h-screen bg-[#24397b] text-white flex flex-col shadow-md overflow-y-auto">
       {/* Logo Icon */}
       <div className="flex items-center justify-center py-4">
-        <div className="flex items-center justify-center gap-4 py-4">
+        <div className="flex items-center justify-center px-4 py-4">
           <img
             src="/logos/uas-motors-logo.png"
             alt="UAS Motors Logo"
-            className="w-auto h-20"
+            className="object-contain w-full h-20"
           />
-          {/* <img
-            src="/logos/garage-logo.png"
-            alt="Second Logo"
-            className="w-auto h-20"
-          /> */}
         </div>
       </div>
 

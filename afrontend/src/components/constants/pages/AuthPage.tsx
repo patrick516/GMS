@@ -41,9 +41,12 @@ const AuthPage = () => {
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden bg-gray-100">
       {/* Background Image + Title */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-        <h1 className="mb-4 text-3xl font-bold tracking-wider text-gray-700 md:text-2.5xl drop-shadow-lg">
-          UAS MOTORS INVENTORY MANAGEMENT SYSTEM
+        <h1 className="mb-4 text-3xl font-bold tracking-wider text-gray-700 md:text-2.5xl drop-shadow-lg uppercase">
+          <span className="text-red-600">Pro</span>
+          <span className="text-blue-700">Tech</span> Garage Inventory
+          Management System
         </h1>
+
         <img
           src="/logos/login-image.png"
           alt="Background"
