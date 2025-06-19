@@ -34,7 +34,7 @@ const InventoryList = () => {
             },
           }),
           axios.get(
-            `${import.meta.env.VITE_API_URL}/inventory/report-detailed`,
+            `${import.meta.env.VITE_API_URL}/reports/inventory/report`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
