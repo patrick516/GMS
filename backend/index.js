@@ -1,10 +1,10 @@
 require("dotenv").config();
 
 const connectDB = require("./db");
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+
 const uploadRoutes = require("./routes/upload.route");
 const inventoryRoutes = require("./routes/inventory.route");
 const supplierRoutes = require("./routes/supplier");
@@ -19,7 +19,6 @@ const invoiceRoutes = require("./routes/invoice");
 const quotationRoutes = require("./routes/quotation");
 const authRoutes = require("./routes/authRoute");
 const auditRoutes = require("./routes/audit");
-
 const notifyRoutes = require("./routes/notify");
 
 const app = express();
@@ -28,8 +27,14 @@ app.use(express.json());
 
 const verifyToken = require("./middleware/verifyToken");
 
+//  Add this basic test route BEFORE the rest
+app.get("/", (req, res) => {
+  res.send("GMS backend is live.");
+});
+
 // Serve static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/supplier", supplierRoutes);
 app.use("/api/customers", customerRoutes);
@@ -45,7 +50,6 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/quotations", quotationRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/audit", auditRoutes);
-
 app.use("/api/notify", notifyRoutes);
 
 connectDB();
