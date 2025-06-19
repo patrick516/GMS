@@ -3,7 +3,7 @@ import API from "@utils/axios";
 const BASE = import.meta.env.VITE_API_URL;
 
 export const fetchInventoryReport = () =>
-  API.get(`${BASE}/inventory/report-detailed`);
+  API.get(`${BASE}/reports/inventory/report`);
 
 export const fetchInvoicesSummary = () => API.get(`${BASE}/invoices/summary`);
 
