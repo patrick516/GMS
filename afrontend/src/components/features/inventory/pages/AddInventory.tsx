@@ -170,6 +170,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
           }
         );
         toast.success("Inventory added successfully");
+        console.log("Toast should appear!");
         reset();
       }
 
@@ -189,6 +190,7 @@ const AddInventory = ({ itemToEdit, onClose, onUpdate }: any) => {
       <h2 className="mb-10 text-4xl font-bold text-center">
         {itemToEdit ? "Edit Inventory" : "Add Inventory"}
       </h2>
+
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="grid grid-cols-1 gap-4 md:grid-cols-2 "

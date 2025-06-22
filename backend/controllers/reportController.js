@@ -18,35 +18,33 @@ exports.getInventoryReport = async (req, res) => {
     const detailed = [];
 
     inventories.forEach((inv) => {
-      const purchaseValue = inv.quantity * inv.purchasePrice;
-      const saleValue = inv.quantity * inv.salePricePerUnit;
-      const profit = saleValue - purchaseValue;
-
-      totalPurchased += purchaseValue;
-      totalProfit += profit;
-
       const soldQty = customers
         .filter(
           (c) => c.purchasedInventoryId?.toString() === inv._id.toString()
         )
         .reduce((sum, c) => sum + (c.quantityPurchased || 0), 0);
 
-      totalSold += soldQty;
+      const costPerUnit = inv.costPerUnit || 0;
+      const salePrice = inv.salePricePerUnit || 0;
+
+      const purchaseValue = inv.quantity * costPerUnit;
+      const saleValue = soldQty * salePrice;
+      const profit = saleValue - purchaseValue;
+
+      totalPurchased += purchaseValue;
+      totalSold += saleValue;
+      totalProfit += profit;
 
       detailed.push({
         name: inv.name,
         quantity: inv.quantity,
-        purchasePrice: inv.purchasePrice,
-        salePrice: inv.salePricePerUnit,
+        salePrice,
         purchaseValue,
         saleValue,
         profit,
         soldQty,
       });
     });
-
-    // 👇 Log the detailed list and count
-    console.log(" DETAILED INVENTORY:", detailed.length, detailed);
 
     res.status(200).json({
       purchased: totalPurchased,

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { toast } from "react-toastify"; // ✅ import toast
+import { toast } from "react-toastify";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -21,7 +21,7 @@ API.interceptors.response.use(
       error.response.status === 401 &&
       !window.location.pathname.includes("/auth")
     ) {
-      // ✅ Show toast before redirect
+      //  Show toast before redirect
       toast.error("Session expired. Please log in again.");
 
       localStorage.removeItem("token");

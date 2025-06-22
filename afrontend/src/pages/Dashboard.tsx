@@ -63,14 +63,15 @@ const Dashboard = () => {
   // Inventory bar chart data
   useEffect(() => {
     fetchInventoryReport().then((res) => {
-      const items: InventoryItem[] = res.data.data;
+      const items: any[] = res?.data?.detailed || [];
+
       const chartData: InventoryItem[] = items.map((item) => ({
         name: item.name,
         quantity: item.quantity,
-        totalPurchased: item.totalPurchased,
-        totalSold: item.totalSold,
-        cost: item.cost,
-        revenue: item.revenue,
+        totalPurchased: item.quantity,
+        totalSold: item.soldQty,
+        cost: item.purchaseValue,
+        revenue: item.saleValue,
       }));
 
       setInventoryStats(chartData);
@@ -81,7 +82,16 @@ const Dashboard = () => {
     const fetchFinanceData = async () => {
       try {
         const inventoryRes = await fetchInventoryReport();
-        const items: InventoryItem[] = inventoryRes.data.data;
+        const items: InventoryItem[] = (inventoryRes?.data?.detailed || []).map(
+          (item: any) => ({
+            name: item.name,
+            quantity: item.quantity,
+            totalPurchased: item.quantity,
+            totalSold: item.soldQty,
+            cost: item.purchaseValue,
+            revenue: item.saleValue,
+          })
+        );
 
         const cost = items.reduce((sum, item) => sum + (item.cost || 0), 0);
         const revenue = items.reduce(

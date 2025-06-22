@@ -35,22 +35,21 @@ app.get("/", (req, res) => {
 // Serve static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes (no /api prefix)
-app.use("/inventory", inventoryRoutes);
-app.use("/supplier", supplierRoutes);
-app.use("/customers", customerRoutes);
-app.use("/debtors", debtorRoutes);
-app.use("/reorder", reorderRoutes);
-app.use("/employees", employeeRoutes);
-app.use("/payslips", payslipRoutes);
-app.use("/vehicles", vehicleRoutes);
-app.use("/reports", reportRoutes);
-app.use("/invoices", invoiceRoutes);
-app.use("/upload", uploadRoutes);
-app.use("/quotations", quotationRoutes);
-app.use("/auth", authRoutes);
-app.use("/audit", auditRoutes);
-app.use("/notify", notifyRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/supplier", supplierRoutes);
+app.use("/api/customers", customerRoutes);
+app.use("/api/debtors", debtorRoutes);
+app.use("/api/reorder", reorderRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/payslips", payslipRoutes);
+app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/invoices", invoiceRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/quotations", quotationRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/audit", auditRoutes);
+app.use("/api/notify", notifyRoutes);
 
 connectDB();
 

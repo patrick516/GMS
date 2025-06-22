@@ -43,8 +43,9 @@ const InventoryList = () => {
           ),
         ]);
 
-        const inventoryList = inventoryRes.data;
-        const salesData = salesRes.data.data;
+        const inventoryList = inventoryRes?.data || [];
+
+        const salesData = salesRes?.data?.data || [];
 
         const formatted = inventoryList.map((item: any, index: number) => {
           const match = salesData.find((s: any) => s._id === item._id);
